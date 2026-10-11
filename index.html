@@ -1,0 +1,1981 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Outcrop Field Book</title>
+<meta name="theme-color" content="#1b2320">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: one-screen field instrument — header, scrolling work area, thumb-reach tab bar. Hi-vis orange is the single accent, as on field vests and flagging tape. */
+:root{
+  --bg:#e9ece6; --surface:#f7f8f4; --surface2:#dfe3dc; --ink:#18201d; --muted:#57635d; --line:#c3cac1;
+  --accent:#d9520f; --accent-ink:#ffffff; --plane:#17657f; --linec:#a52a63;
+  --good:#23704a; --warn:#9a6411; --bad:#b0281c;
+  --dens:217 82 15; --s1:#3c7a1e; --s2:#6d45a8; --s3:#a8700c; --s4:#46545c;
+  --f-disp:"Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111613; --surface:#1a201d; --surface2:#242c28; --ink:#e6ece7; --muted:#97a69e; --line:#313b36;
+  --accent:#ff7a2f; --accent-ink:#1a0d04; --plane:#5fb6d4; --linec:#f07aa9;
+  --good:#5cc08a; --warn:#e2ac4f; --bad:#ff7a6b;
+  --dens:255 122 47; --s1:#9ad26a; --s2:#b996f0; --s3:#e6b450; --s4:#b9c6bf; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111613; --surface:#1a201d; --surface2:#242c28; --ink:#e6ece7; --muted:#97a69e; --line:#313b36;
+  --accent:#ff7a2f; --accent-ink:#1a0d04; --plane:#5fb6d4; --linec:#f07aa9;
+  --good:#5cc08a; --warn:#e2ac4f; --bad:#ff7a6b;
+  --dens:255 122 47; --s1:#9ad26a; --s2:#b996f0; --s3:#e6b450; --s4:#b9c6bf; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{display:flex;flex-direction:column;height:100%;max-width:1120px;margin:0 auto}
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--bg)}
+.brand{font-family:var(--f-disp);font-weight:700;font-size:21px;letter-spacing:.02em;line-height:1;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.brand svg{flex:none}
+.top .spacer{flex:1}
+.chip-stat{font-family:var(--f-mono);font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);white-space:nowrap}
+.chip-stat.ok{border-color:var(--good);color:var(--good)}
+.chip-stat.off{color:var(--muted)}
+.iconbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;flex:none}
+main{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 16px 24px;-webkit-overflow-scrolling:touch}
+.view{display:flex;flex-direction:column;gap:14px}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{border:0;background:none;padding:8px 2px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--f-disp);font-weight:600;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--accent)}
+.tabs svg{width:22px;height:22px}
+h2{font-family:var(--f-disp);font-weight:700;font-size:22px;margin:0;letter-spacing:.01em;text-wrap:balance}
+h3{font-family:var(--f-disp);font-weight:600;font-size:17px;margin:0;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row-between{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:420px){.grid3{grid-template-columns:1fr 1fr}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:0}
+input[type=text],input[type=number],input[type=search],select,textarea{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink)}
+textarea{min-height:56px;resize:vertical}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center;min-height:42px}
+.btn:hover{border-color:var(--muted)}
+a.btn{text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.big{font-family:var(--f-disp);font-size:22px;letter-spacing:.06em;text-transform:uppercase;min-height:60px;flex:1}
+.btn:disabled{opacity:.5;cursor:default}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:8px 14px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px;white-space:nowrap;cursor:pointer;flex:none}
+.chip[aria-pressed="true"]{border-color:var(--plane);background:var(--plane);color:var(--surface)}
+.chip.ln[aria-pressed="true"]{border-color:var(--linec);background:var(--linec)}
+.wrapchips{flex-wrap:wrap;overflow:visible}
+
+/* instrument */
+.instrument{display:grid;grid-template-columns:minmax(0,220px) 1fr;gap:16px;align-items:center}
+@media (max-width:460px){.instrument{grid-template-columns:1fr}}
+.dialwrap{width:100%;max-width:220px;aspect-ratio:1;margin:0 auto}
+#dial{width:100%;height:100%;display:block}
+.readout .big{font-family:var(--f-disp);font-weight:700;font-size:64px;line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:.01em;display:flex;align-items:baseline;gap:4px}
+.readout .big .sep{color:var(--muted);font-weight:500}
+.readout .cap{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.readout .sub{font-family:var(--f-mono);font-size:13px;margin-top:4px}
+.steady{display:flex;align-items:center;gap:8px;margin-top:10px}
+.steady .bar{flex:1;height:8px;border-radius:4px;background:var(--surface2);overflow:hidden}
+.steady .bar i{display:block;height:100%;width:0;background:var(--muted);transition:width .15s}
+.steady.is-steady .bar i{background:var(--good)}
+.steady span{font-size:13px;min-width:0}
+.banner{border:1px solid var(--warn);color:var(--ink);background:color-mix(in srgb,var(--warn) 10%,var(--surface));border-radius:8px;padding:10px 12px;font-size:14px}
+.banner b{color:var(--warn)}
+.step{font-family:var(--f-disp);font-weight:600;font-size:16px;letter-spacing:.03em;color:var(--linec)}
+.recent li,.loglist li{list-style:none}
+.recent,.loglist{margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rec{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;text-align:left;width:100%}
+.rec .sym{width:34px;height:34px}
+.rec .t{font-weight:700;display:block}
+.rec .m{font-size:12px;color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec .v{font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.tag.ex{border-color:var(--warn);color:var(--warn)}
+.min0{min-width:0}
+
+/* analyse */
+.ana{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.ana{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}}
+.netbox{width:100%;max-width:520px;aspect-ratio:1;margin:0 auto;position:relative}
+.netbox canvas{width:100%;height:100%;display:block;touch-action:none}
+.rosebox{width:100%;max-width:320px;aspect-ratio:1;margin:0 auto}
+.rosebox canvas{width:100%;height:100%;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.kv{width:100%;border-collapse:collapse;font-size:14px}
+.kv td{padding:5px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.kv td:last-child{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;padding-left:10px}
+.tablewrap{overflow-x:auto}
+details.tool{border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+details.tool summary{padding:12px 14px;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px}
+details.tool summary::after{content:"+";font-family:var(--f-mono);color:var(--muted)}
+details.tool[open] summary::after{content:"−"}
+details.tool .in{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.result{font-family:var(--f-mono);font-size:14px;background:var(--surface2);border-radius:8px;padding:10px 12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pointer{font-family:var(--f-mono);font-size:13px;min-height:1.4em;text-align:center}
+
+/* guide */
+.guide details{border-bottom:1px solid var(--line)}
+.guide summary{padding:12px 2px;cursor:pointer;font-family:var(--f-disp);font-weight:600;font-size:19px;letter-spacing:.01em;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.guide summary::after{content:"+";font-family:var(--f-mono);color:var(--muted)}
+.guide details[open] summary::after{content:"−"}
+.guide .gbody{padding:0 2px 16px;max-width:68ch;display:flex;flex-direction:column;gap:10px}
+.guide .gbody p{margin:0}
+.guide .gbody ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.gt{width:100%;border-collapse:collapse;font-size:14px;min-width:420px}
+.gt th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding:6px 8px 6px 0}
+.gt td{border-bottom:1px solid var(--line);padding:6px 8px 6px 0;vertical-align:top}
+.gt td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+mark{background:color-mix(in srgb,var(--accent) 30%,transparent);color:inherit}
+
+/* sheet + toast */
+.scrim{position:fixed;inset:0;background:rgba(10,14,12,.45);display:flex;align-items:flex-end;justify-content:center;z-index:2000}
+.sheet{background:var(--surface);color:var(--ink);width:100%;max-width:560px;max-height:88%;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;border:1px solid var(--line)}
+.sheet>*{flex-shrink:0}
+[hidden]{display:none!important}
+@media (min-width:700px){.scrim{align-items:center}.sheet{border-radius:16px}}
+.sheet .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:14px;z-index:2100;max-width:calc(100% - 32px);text-align:center}
+
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+
+.leaflet-tile::selection {
+	background: transparent;
+}
+
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+
+
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+
+.leaflet-container img.leaflet-tile {
+	
+	mix-blend-mode: plus-lighter;
+}
+
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+
+.leaflet-pane         { z-index: 400; }
+
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	display: inline-block;
+	position: absolute;
+	}
+
+
+
+
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; 
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+
+
+
+
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+
+
+
+
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+
+
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; 
+	pointer-events: auto;
+	}
+
+
+
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+
+
+
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+
+
+
+
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+
+
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+
+
+
+
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+
+
+.leaflet-default-icon-path { 
+	}
+
+
+
+
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+
+
+
+
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+
+	margin: -10px auto 0;
+	pointer-events: auto;
+
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+
+
+
+
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+
+
+
+
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+
+
+
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+
+
+
+@media print {
+	
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
+/* map */
+.mapwrap{position:relative;height:min(64vh,580px);min-height:330px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);isolation:isolate;z-index:0}
+#map{position:absolute;inset:0;background:var(--surface2);z-index:0}
+#map.drawing{cursor:crosshair}
+.leaflet-container{font-family:var(--f-body);font-size:13px}
+.leaflet-bar a{color:#111}
+.mapctl{position:absolute;z-index:800;display:flex;gap:6px;align-items:center}
+.mapctl.tr{top:10px;right:10px}
+.mapctl.br{bottom:26px;right:10px;flex-direction:column}
+.mapctl select{width:auto;max-width:190px;padding:7px 8px;font-size:14px;background:var(--surface);border-color:var(--line);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.mapbtn{width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);color:var(--ink);text-decoration:none}
+.drawbar{position:absolute;left:8px;right:8px;bottom:8px;z-index:900;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.drawbar .btn{min-height:38px;padding:6px 10px}
+.drawbar #drawInfo{flex:1 1 120px;font-family:var(--f-mono);font-size:13px}
+.symk{background:none;border:0}
+.symk svg{display:block;overflow:visible}
+.vtx{background:#ff7a2f;border:3px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.lgi{display:inline-flex;align-items:center;gap:6px;font-size:13px}
+.lgi i,.sw{display:inline-block;width:16px;height:12px;border-radius:2px;border:1px solid rgba(0,0,0,.25)}
+.frow .sw{width:34px;height:22px}
+.frow svg{width:34px}
+.drawtools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 17 L21 9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M13 13 L15.2 17.4" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg>
+      Outcrop
+    </div>
+    <span class="spacer"></span>
+    <span id="gpsChip" class="chip-stat off" title="GPS">GPS off</span>
+    <button class="iconbtn" id="btnSettings" aria-label="Settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <main id="main">
+    <!-- MEASURE -->
+    <section id="v-measure" class="view">
+      <div class="row-between">
+        <div class="seg" id="modeSeg" role="group" aria-label="What to measure">
+          <button type="button" data-mode="plane" aria-pressed="true">Plane</button>
+          <button type="button" data-mode="line" aria-pressed="false">Line</button>
+          <button type="button" data-mode="pl" aria-pressed="false">Plane + line</button>
+        </div>
+        <span class="small muted" id="northLbl">True north · decl 0.0°</span>
+      </div>
+
+      <div class="card instrument">
+        <div class="dialwrap"><canvas id="dial" aria-label="Compass dial showing the current reading"></canvas></div>
+        <div class="readout min0">
+          <div class="big"><span id="rdA">--</span><span class="sep">/</span><span id="rdB">---</span></div>
+          <div class="cap" id="rdCap">dip / dip direction</div>
+          <div class="sub" id="rdSub">Strike — (right-hand rule)</div>
+          <div class="steady" id="steady"><div class="bar"><i id="steadyFill"></i></div><span id="steadyTxt">Compass not started</span></div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="btnStart" type="button">Start compass</button>
+            <button class="btn" id="btnManual" type="button">Type it in</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sensorBanner" class="banner" hidden></div>
+      <div id="plStep" class="step" hidden></div>
+
+      <div class="field">
+        <h3 style="margin-bottom:6px">Structure</h3>
+        <div class="chips" id="typeChips"></div>
+      </div>
+
+      <div class="grid2">
+        <label class="f">Station
+          <span class="row" style="flex-wrap:nowrap"><input type="text" id="station" autocomplete="off"><button class="btn" id="btnNextSt" type="button" title="Next station" aria-label="Next station">+1</button></span>
+        </label>
+        <label class="f">Rock
+          <input type="text" id="rock" list="rockList" autocomplete="off" placeholder="e.g. Schist">
+        </label>
+      </div>
+      <label class="f">Note <textarea id="note" placeholder="Outcrop, fabric, alteration, sample ID…"></textarea></label>
+      <div class="row">
+        <label class="btn" for="photo" style="cursor:pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <span id="photoLbl">Add photo</span>
+        </label>
+        <input type="file" id="photo" accept="image/*" capture="environment" hidden>
+        <label class="row small" style="gap:6px;cursor:pointer"><input type="checkbox" id="autoRec"> Record by itself when held steady</label>
+      </div>
+      <div class="row">
+        <button class="btn primary big" id="btnRecord" type="button" disabled>Record</button>
+      </div>
+
+      <div class="row-between"><h3>Last readings</h3><button class="btn" id="btnUndo" type="button" hidden>Undo last</button></div>
+      <ul class="recent" id="recent"></ul>
+    </section>
+
+    <!-- MAP -->
+    <section id="v-map" class="view" hidden>
+      <div class="mapwrap">
+        <div id="map" aria-label="Field map"></div>
+        <div class="mapctl tr"><select id="baseSel" aria-label="Base map"></select></div>
+        <div class="mapctl br">
+          <button class="mapbtn" id="mapLocate" type="button" title="Show my position" aria-label="Show my position"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+          <button class="mapbtn" id="mapFit" type="button" title="Zoom to my data" aria-label="Zoom to my data"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        </div>
+        <div class="drawbar" id="drawBar" hidden>
+          <span id="drawInfo"></span>
+          <button class="btn" id="drawUndo" type="button">Undo</button>
+          <button class="btn" id="drawGps" type="button" title="Add a point at my GPS position">+ My position</button>
+          <label class="row small" id="drawAutoWrap" style="gap:4px"><input type="checkbox" id="drawAuto"> Walk it</label>
+          <button class="btn" id="drawCancel" type="button">Cancel</button>
+          <button class="btn primary" id="drawFinish" type="button">Finish</button>
+          <button class="btn primary" id="drawEditDone" type="button" hidden>Done</button>
+        </div>
+      </div>
+      <div id="mapNote" class="banner" hidden></div>
+      <div class="drawtools">
+        <button class="btn" type="button" id="drawLine"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 18c4-1 5-8 9-9s6 4 9 1"/></svg>Draw contact or fault</button>
+        <button class="btn" type="button" id="drawPoly"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M4 7l7-4 9 5-2 11-11 2z"/></svg>Draw unit or area</button>
+      </div>
+      <div class="row">
+        <label class="row small" style="gap:6px"><input type="checkbox" id="mapShowRd" checked> Show readings</label>
+        <span class="small muted" id="mapNoPos"></span>
+      </div>
+      <div class="card"><h3 style="margin-bottom:8px">Legend</h3><div class="legend" id="mapLegend"></div></div>
+      <div class="row">
+        <button class="btn" id="mapOverlay" type="button">Map images</button>
+        <a class="btn" id="gmLink" href="https://www.google.com/maps" target="_blank" rel="noopener">Open here in Google Maps</a>
+        <button class="btn" id="mapExGeo" type="button">Export map (GeoJSON)</button>
+        <button class="btn" id="mapExKml" type="button">Export map (KML)</button>
+        <label class="btn" for="mapImport" style="cursor:pointer">Import KML / GeoJSON</label>
+        <input type="file" id="mapImport" accept=".kml,.geojson,.json,application/vnd.google-earth.kml+xml,application/json" hidden>
+      </div>
+      <div class="row-between"><h3>Lines and units</h3></div>
+      <ul class="loglist" id="featList"></ul>
+    </section>
+
+    <!-- LOG -->
+    <section id="v-log" class="view" hidden>
+      <div class="row-between"><h2 id="logTitle">Log</h2><span class="small muted" id="logCount"></span></div>
+      <div id="exBanner" class="banner" hidden><b>Example data.</b> These readings are made up so the plots have something to show. <button class="btn" id="btnClearEx" type="button" style="margin-top:8px">Remove the examples</button></div>
+      <div class="grid3">
+        <label class="f">Station<select id="fStation"></select></label>
+        <label class="f">Structure<select id="fType"></select></label>
+        <label class="f">Search<input type="search" id="fText" placeholder="note, rock…"></label>
+      </div>
+      <div class="row">
+        <button class="btn" id="exCsv" type="button">CSV</button>
+        <button class="btn" id="exGeo" type="button">GeoJSON</button>
+        <button class="btn" id="exKml" type="button">KML</button>
+        <button class="btn" id="exBak" type="button">Backup (with photos)</button>
+        <button class="btn" id="exShare" type="button" hidden>Share CSV</button>
+        <label class="btn" for="importFile" style="cursor:pointer">Import CSV / backup</label>
+        <input type="file" id="importFile" accept=".csv,.txt,.json,text/csv,application/json" hidden>
+      </div>
+      <ul class="loglist" id="loglist"></ul>
+      <button class="btn" id="btnMore" type="button" hidden>Show more</button>
+    </section>
+
+    <!-- ANALYSE -->
+    <section id="v-analyse" class="view" hidden>
+      <div class="row-between"><h2>Interpret</h2>
+        <div class="seg" id="projSeg" role="group" aria-label="Projection">
+          <button type="button" data-p="area" aria-pressed="true">Equal area</button>
+          <button type="button" data-p="angle" aria-pressed="false">Equal angle</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <label class="f">Station<select id="aStation"></select></label>
+        <label class="f">Plot<select id="aShow">
+          <option value="pd">Poles + density</option>
+          <option value="p">Poles</option>
+          <option value="gc">Great circles</option>
+          <option value="d">Density only</option>
+        </select></label>
+      </div>
+      <div class="chips wrapchips" id="aTypes"></div>
+      <div class="ana">
+        <div class="card" style="display:flex;flex-direction:column;gap:10px">
+          <div class="netbox"><canvas id="net" aria-label="Stereonet, lower hemisphere"></canvas></div>
+          <div class="pointer" id="netPtr">Touch the net to read an orientation or a reading</div>
+          <div class="legend" id="netLegend"></div>
+          <div class="row"><button class="btn" id="netPng" type="button">Save stereonet picture</button><button class="btn" id="rosePng" type="button">Save rose picture</button></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div class="card"><h3 style="margin-bottom:8px">Summary</h3><div class="tablewrap"><table class="kv" id="stats"></table></div><p class="small muted" id="statsNote" style="margin:8px 0 0"></p></div>
+          <div class="card"><h3 style="margin-bottom:8px" id="roseTitle">Rose of strikes</h3><div class="rosebox"><canvas id="rose" aria-label="Rose diagram"></canvas></div></div>
+        </div>
+      </div>
+      <h3>Tools</h3>
+      <details class="tool"><summary>Two planes: intersection and angle</summary><div class="in">
+        <div class="grid2"><label class="f">Plane A dip/dip dir<input type="text" id="tA" value="40/090"></label><label class="f">Plane B dip/dip dir<input type="text" id="tB" value="60/200"></label></div>
+        <div class="result" id="tAB"></div></div></details>
+      <details class="tool"><summary>Apparent dip in a section</summary><div class="in">
+        <div class="grid3"><label class="f">Dip<input type="number" id="adDip" value="45"></label><label class="f">Dip dir<input type="number" id="adDd" value="120"></label><label class="f">Section azimuth<input type="number" id="adAz" value="090"></label></div>
+        <div class="result" id="adOut"></div></div></details>
+      <details class="tool"><summary>True thickness from outcrop width</summary><div class="in">
+        <div class="grid3"><label class="f">Width along slope (m)<input type="number" id="ttW" value="25"></label><label class="f">Bed dip<input type="number" id="ttDip" value="35"></label><label class="f">Slope angle<input type="number" id="ttSl" value="15"></label></div>
+        <label class="row small"><input type="checkbox" id="ttSame"> Slope faces the same way the beds dip</label>
+        <p class="small muted" style="margin:0">Measure the width square to strike. Otherwise multiply by the sine of the angle between your traverse and strike first.</p>
+        <div class="result" id="ttOut"></div></div></details>
+      <details class="tool"><summary>Slope or pit wall check (Markland test)</summary><div class="in">
+        <div class="grid3"><label class="f">Face dip<input type="number" id="kmDip" value="70"></label><label class="f">Face dip dir<input type="number" id="kmDd" value="180"></label><label class="f">Friction angle φ<input type="number" id="kmPhi" value="30"></label></div>
+        <p class="small muted" style="margin:0">Uses the planes on the net above. Lateral limit ±20°.</p>
+        <div class="result" id="kmOut"></div></div></details>
+    </section>
+
+    <!-- GUIDE -->
+    <section id="v-guide" class="view guide" hidden>
+      <div class="row-between"><h2>Field guide</h2></div>
+      <input type="search" id="gSearch" placeholder="Search the guide: garnet, R4, tight fold, Wentworth…" aria-label="Search the guide">
+      <div id="gBody"></div>
+    </section>
+  </main>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-v="measure" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Measure</button>
+    <button role="tab" data-v="map" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</button>
+    <button role="tab" data-v="log" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>Log</button>
+    <button role="tab" data-v="analyse" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.5 9.5C8 12 16 12 20.5 9.5"/><circle cx="9" cy="15" r="1" fill="currentColor"/><circle cx="14" cy="16" r="1" fill="currentColor"/></svg>Interpret</button>
+    <button role="tab" data-v="guide" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5c3-1 5-1 8 1 3-2 5-2 8-1v14c-3-1-5-1-8 1-3-2-5-2-8-1z"/><path d="M12 6v14"/></svg>Guide</button>
+  </nav>
+</div>
+
+<datalist id="rockList"></datalist>
+<div id="sheetHost"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="leaflet.js"></script>
+<script id="geo-math">
+/* Orientation, stereonet, statistics and map-grid maths. No page access here. */
+var GM = (function(){
+  var D = Math.PI/180, R2D = 180/Math.PI;
+  function n360(a){ return ((a % 360) + 360) % 360; }
+  function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+  function dot(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+  function cross(a,b){ return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+  function len(a){ return Math.hypot(a[0],a[1],a[2]); }
+  function unit(a){ var l = len(a) || 1; return [a[0]/l, a[1]/l, a[2]/l]; }
+  function neg(a){ return [-a[0],-a[1],-a[2]]; }
+  function angDiff(a,b){ var d = Math.abs(n360(a) - n360(b)); return d > 180 ? 360 - d : d; }
+  function axAngle(a,b){ return Math.acos(clamp(Math.abs(dot(unit(a),unit(b))),0,1))*R2D; }
+
+  /* W3C DeviceOrientation: R = Rz(alpha) Rx(beta) Ry(gamma); device frame -> Earth frame (x East, y North, z Up). */
+  function rot(alpha, beta, gamma){
+    var a=alpha*D, b=beta*D, g=gamma*D;
+    var cA=Math.cos(a), sA=Math.sin(a), cB=Math.cos(b), sB=Math.sin(b), cG=Math.cos(g), sG=Math.sin(g);
+    return [[cA*cG - sA*sB*sG, -cB*sA, cG*sA*sB + cA*sG],
+            [cG*sA + cA*sB*sG,  cA*cB, sA*sG - cA*cG*sB],
+            [-cB*sG,            sB,    cB*cG]];
+  }
+  function col(M,i){ return [M[0][i], M[1][i], M[2][i]]; }
+  function lineVec(trend, plunge){ var t=trend*D, p=plunge*D; return [Math.cos(p)*Math.sin(t), Math.cos(p)*Math.cos(t), -Math.sin(p)]; }
+  function normalUp(dip, dd){ var d=dip*D, a=dd*D; return [Math.sin(d)*Math.sin(a), Math.sin(d)*Math.cos(a), Math.cos(d)]; }
+  function poleVec(dip, dd){ return neg(normalUp(dip, dd)); }
+  function planeOf(n){ var v = unit(n); if (v[2] < 0) v = neg(v);
+    var dip = Math.acos(clamp(v[2],-1,1))*R2D;
+    var dd = Math.hypot(v[0],v[1]) < 1e-9 ? 0 : n360(Math.atan2(v[0],v[1])*R2D);
+    return {dip:dip, dipdir:dd}; }
+  function lineOf(v0){ var v = unit(v0); if (v[2] > 0) v = neg(v);
+    var pl = Math.asin(clamp(-v[2],-1,1))*R2D;
+    var tr = Math.hypot(v[0],v[1]) < 1e-9 ? 0 : n360(Math.atan2(v[0],v[1])*R2D);
+    return {trend:tr, plunge:pl}; }
+  function strikeOf(dd){ return n360(dd - 90); }
+  /* Phone back flat on the surface: plane from the screen normal. Long edge along a line: line from the top-edge axis. */
+  function phonePlane(alpha,beta,gamma){ return planeOf(col(rot(alpha,beta,gamma),2)); }
+  function phoneLine(alpha,beta,gamma){ return lineOf(col(rot(alpha,beta,gamma),1)); }
+  function rake(dip, dd, trend, plunge){
+    var n = normalUp(dip, dd), st = strikeOf(dd)*D, s = [Math.sin(st), Math.cos(st), 0], l = lineVec(trend, plunge);
+    var k = dot(l,n), misfit = Math.asin(clamp(Math.abs(k),0,1))*R2D;
+    var p = [l[0]-k*n[0], l[1]-k*n[1], l[2]-k*n[2]];
+    if (len(p) < 1e-9) return {rake:90, misfit:misfit, onPlane:lineOf(lineVec(dd,dip))};
+    p = unit(p); if (p[2] > 0) p = neg(p);
+    return {rake: Math.acos(clamp(dot(p,s),-1,1))*R2D, misfit:misfit, onPlane: lineOf(p)};
+  }
+  function apparentDip(dip, dd, az){ return Math.atan(Math.tan(dip*D)*Math.abs(Math.cos((az-dd)*D)))*R2D; }
+
+  /* Stereonet, unit primitive circle, x east, y north, lower hemisphere. */
+  function project(v0, kind){ var v = unit(v0); if (v[2] > 0) v = neg(v);
+    var th = Math.acos(clamp(-v[2],-1,1)), r = kind === 'angle' ? Math.tan(th/2) : Math.SQRT2*Math.sin(th/2);
+    var h = Math.hypot(v[0],v[1]); if (h < 1e-12) return [0,0]; return [r*v[0]/h, r*v[1]/h]; }
+  function unproject(x, y, kind){ var r = Math.hypot(x,y); if (r > 1 + 1e-9) return null; r = Math.min(r,1);
+    var th = kind === 'angle' ? 2*Math.atan(r) : 2*Math.asin(clamp(r/Math.SQRT2,0,1)), t = Math.atan2(x,y);
+    return [Math.sin(th)*Math.sin(t), Math.sin(th)*Math.cos(t), -Math.cos(th)]; }
+  function greatCircle(dip, dd, steps){ steps = steps || 64; var st = strikeOf(dd)*D, s=[Math.sin(st),Math.cos(st),0], d = lineVec(dd, dip), out=[];
+    for (var i=0;i<=steps;i++){ var a=Math.PI*i/steps, c=Math.cos(a), si=Math.sin(a); out.push([c*s[0]+si*d[0], c*s[1]+si*d[1], c*s[2]+si*d[2]]); } return out; }
+
+  /* Statistics on axes (poles or lines). */
+  function jacobi(A){ var a=[A[0].slice(),A[1].slice(),A[2].slice()], v=[[1,0,0],[0,1,0],[0,0,1]];
+    for (var sweep=0; sweep<50; sweep++){ var off = Math.abs(a[0][1])+Math.abs(a[0][2])+Math.abs(a[1][2]); if (off < 1e-12) break;
+      for (var p=0;p<2;p++) for (var q=p+1;q<3;q++){ if (Math.abs(a[p][q]) < 1e-15) continue;
+        var th = (a[q][q]-a[p][p])/(2*a[p][q]), t = (th>=0?1:-1)/(Math.abs(th)+Math.sqrt(th*th+1)), c=1/Math.sqrt(t*t+1), s=t*c;
+        for (var k=0;k<3;k++){ var akp=a[k][p], akq=a[k][q]; a[k][p]=c*akp - s*akq; a[k][q]=s*akp + c*akq; }
+        for (k=0;k<3;k++){ var apk=a[p][k], aqk=a[q][k]; a[p][k]=c*apk - s*aqk; a[q][k]=s*apk + c*aqk; }
+        for (k=0;k<3;k++){ var vkp=v[k][p], vkq=v[k][q]; v[k][p]=c*vkp - s*vkq; v[k][q]=s*vkp + c*vkq; } } }
+    var out=[0,1,2].map(function(i){ return {val:a[i][i], vec:[v[0][i],v[1][i],v[2][i]]}; });
+    out.sort(function(x,y){ return y.val - x.val; }); return out; }
+  function eigen(vs){ var T=[[0,0,0],[0,0,0],[0,0,0]], N=vs.length;
+    vs.forEach(function(u){ for (var i=0;i<3;i++) for (var j=0;j<3;j++) T[i][j]+=u[i]*u[j]/N; });
+    var e = jacobi(T), s = e.map(function(x){ return Math.max(x.val,1e-9); });
+    var K = Math.log(s[0]/s[1]) / Math.max(Math.log(s[1]/s[2]),1e-9), C = Math.log(s[0]/s[2]);
+    return {e:e, S:s, K:K, C:C}; }
+  function fisher(vs){ var N = vs.length; if (!N) return null; var ref = N > 2 ? eigen(vs).e[0].vec : vs[0], sum=[0,0,0];
+    vs.forEach(function(u){ var w = dot(u,ref) < 0 ? neg(u) : u; sum[0]+=w[0]; sum[1]+=w[1]; sum[2]+=w[2]; });
+    var R = len(sum), mean = unit(sum), k = N > 1 ? (N-1)/Math.max(N-R,1e-9) : Infinity, a95 = NaN;
+    if (N > 1 && R > 0){ var arg = 1 - (N-R)/R*(Math.pow(20, 1/(N-1)) - 1); a95 = arg < -1 ? 180 : Math.acos(clamp(arg,-1,1))*R2D; }
+    return {mean:mean, R:R, Rbar:R/N, k:k, a95:a95, N:N}; }
+  var KAPPA = 40, UNI = (1 - Math.exp(-KAPPA))/KAPPA;
+  function density(v, vs){ var s=0; for (var i=0;i<vs.length;i++) s += Math.exp(KAPPA*(Math.abs(dot(v,vs[i]))-1)); return vs.length ? s/(vs.length*UNI) : 0; }
+  /* Sets by density peaks (Fisher kernel, ~11° half width), each reading to its nearest peak. */
+  function findSets(vs, maxSets){ maxSets = maxSets || 4; var N = vs.length; if (N < 6) return [];
+    var dens = vs.map(function(v){ return density(v, vs); }), idx = vs.map(function(_,i){ return i; });
+    idx.sort(function(a,b){ return dens[b]-dens[a]; }); var peaks=[], top = dens[idx[0]];
+    for (var k=0;k<idx.length && peaks.length<maxSets;k++){ var i = idx[k]; if (dens[i] < Math.max(2, 0.15*top)) break;
+      var ok = peaks.every(function(p){ return axAngle(vs[p], vs[i]) > 30; }); if (ok) peaks.push(i); }
+    if (!peaks.length) return [];
+    var groups = peaks.map(function(){ return []; });
+    vs.forEach(function(v){ var best=0, bd=1e9; peaks.forEach(function(p,j){ var d = axAngle(v, vs[p]); if (d < bd){ bd=d; best=j; } }); groups[best].push(v); });
+    var minN = Math.max(3, Math.round(0.06*N)), sets=[];
+    groups.forEach(function(g,j){ if (g.length >= minN){ var f = fisher(g); sets.push({n:g.length, share:g.length/N, mean:f.mean, k:f.k, a95:f.a95, peak:dens[peaks[j]]}); } });
+    sets.sort(function(a,b){ return b.n-a.n; }); return sets; }
+  function fleuty(ia){ if (ia < 1) return 'isoclinal'; if (ia < 30) return 'tight'; if (ia < 70) return 'close'; if (ia < 120) return 'open'; return 'gentle'; }
+  function plungeWord(p){ if (p < 10) return 'sub-horizontal'; if (p < 30) return 'gently plunging'; if (p < 60) return 'moderately plunging'; if (p < 80) return 'steeply plunging'; return 'sub-vertical'; }
+
+  /* Markland test (planar, wedge, flexural toppling). */
+  function kinematics(planes, face, phi, lat){ lat = lat || 20; var N = planes.length, res = {N:N, planar:0, topple:0, wedge:0, pairs:0};
+    if (!N) return res;
+    planes.forEach(function(p){
+      if (p.dip > phi && p.dip < face.dip && angDiff(p.dipdir, face.dipdir) <= lat) res.planar++;
+      if (p.dip >= 90 - face.dip + phi && angDiff(p.dipdir, face.dipdir + 180) <= lat) res.topple++; });
+    var seed = 7; function rnd(){ seed = (seed*16807) % 2147483647; return seed/2147483647; }
+    var total = N*(N-1)/2, many = total > 20000, tries = many ? 20000 : total, i=0, j=1;
+    for (var t=0; t<tries; t++){
+      var a, b; if (many){ a = Math.floor(rnd()*N); b = Math.floor(rnd()*N); if (a === b) continue; }
+      else { a = i; b = j; j++; if (j >= N){ i++; j = i+1; } }
+      var c = cross(normalUp(planes[a].dip, planes[a].dipdir), normalUp(planes[b].dip, planes[b].dipdir)); if (len(c) < 1e-6) continue;
+      res.pairs++; var L = lineOf(c);
+      if (L.plunge > phi && angDiff(L.trend, face.dipdir) < 90 && L.plunge < apparentDip(face.dip, face.dipdir, L.trend)) res.wedge++; }
+    return res; }
+
+  /* Map grids: UTM (WGS 84) and Nepal MUTM (Everest 1830, 3-parameter shift). */
+  var ELL = {WGS84:{a:6378137, f:1/298.257223563}, EV1830:{a:6377276.345, f:1/300.8017}};
+  function tm(lat, lon, e, lon0, k0, FE, FN){ var a=e.a, f=e.f, e2=2*f-f*f, ep2=e2/(1-e2), ph=lat*D, la=lon*D, l0=lon0*D;
+    var sP=Math.sin(ph), cP=Math.cos(ph), tP=Math.tan(ph), N=a/Math.sqrt(1-e2*sP*sP), T=tP*tP, C=ep2*cP*cP, A=(la-l0)*cP;
+    var e4=e2*e2, e6=e4*e2;
+    var M = a*((1-e2/4-3*e4/64-5*e6/256)*ph - (3*e2/8+3*e4/32+45*e6/1024)*Math.sin(2*ph) + (15*e4/256+45*e6/1024)*Math.sin(4*ph) - (35*e6/3072)*Math.sin(6*ph));
+    var x = FE + k0*N*(A + (1-T+C)*A*A*A/6 + (5-18*T+T*T+72*C-58*ep2)*Math.pow(A,5)/120);
+    var y = FN + k0*(M + N*tP*(A*A/2 + (5-T+9*C+4*C*C)*Math.pow(A,4)/24 + (61-58*T+T*T+600*C-330*ep2)*Math.pow(A,6)/720));
+    var conv = Math.atan(Math.tan(la-l0)*sP)*R2D;
+    return {E:x, N:y, conv:conv}; }
+  function toEcef(lat, lon, h, e){ var e2=2*e.f-e.f*e.f, ph=lat*D, la=lon*D, N=e.a/Math.sqrt(1-e2*Math.sin(ph)*Math.sin(ph));
+    return [(N+h)*Math.cos(ph)*Math.cos(la), (N+h)*Math.cos(ph)*Math.sin(la), (N*(1-e2)+h)*Math.sin(ph)]; }
+  function fromEcef(X, e){ var e2=2*e.f-e.f*e.f, p=Math.hypot(X[0],X[1]), lon=Math.atan2(X[1],X[0]), lat=Math.atan2(X[2], p*(1-e2)), h=0;
+    for (var i=0;i<8;i++){ var N=e.a/Math.sqrt(1-e2*Math.sin(lat)*Math.sin(lat)); h = p/Math.cos(lat) - N; lat = Math.atan2(X[2], p*(1 - e2*N/(N+h))); }
+    return {lat:lat*R2D, lon:lon*R2D, h:h}; }
+  function grid(lat, lon, mode){ if (lat == null || lon == null || !isFinite(lat) || !isFinite(lon) || mode === 'none') return null;
+    if (mode === 'utm'){ var zone = Math.floor((lon+180)/6)+1, south = lat < 0, r = tm(lat, lon, ELL.WGS84, zone*6-183, 0.9996, 500000, south ? 1e7 : 0);
+      r.label = 'UTM ' + zone + (south ? 'S' : 'N') + ' (WGS 84)'; return r; }
+    if (mode.indexOf('mutm') === 0){ var cm = +mode.slice(4), X = toEcef(lat, lon, 0, ELL.WGS84);
+      X = [X[0]-295, X[1]-736, X[2]-257]; var g = fromEcef(X, ELL.EV1830), q = tm(g.lat, g.lon, ELL.EV1830, cm, 0.9999, 500000, 0);
+      q.label = 'MUTM ' + cm + '°E (Everest 1830)'; return q; }
+    return null; }
+
+  /* Typed attitudes: "40/120" (dip/dip dir), "N45E/30SE", "N55W 10", "S20W/65NW". */
+  function quadAz(a, th, b){ a = a.toUpperCase(); b = b.toUpperCase(); return n360(a==='N' ? (b==='E' ? th : 360-th) : (b==='E' ? 180-th : 180+th)); }
+  function parseQuadrant(txt){ var m = /^\s*([NS])\s*(\d+(?:\.\d+)?)\s*([EW])\s*[\/,; ]*\s*(\d+(?:\.\d+)?)\s*([NSEW]{0,2})\s*(?:\(\s*([NS])\s*(\d+(?:\.\d+)?)\s*([EW])\s*\))?\s*$/i.exec(txt || ''); if (!m) return null;
+    var th=+m[2], dip=+m[4], dq=(m[5]||'').toUpperCase(); if (th > 90 || dip > 90) return null;
+    var s = quadAz(m[1], th, m[3]), dd = n360(s+90);
+    if (m[6]){ var hint = quadAz(m[6], +m[7], m[8]); if (angDiff(n360(s-90), hint) < angDiff(dd, hint)) dd = n360(s-90); }
+    else if (dq){ var tx = (dq.indexOf('E')>=0 ? 1 : 0) - (dq.indexOf('W')>=0 ? 1 : 0), ty = (dq.indexOf('N')>=0 ? 1 : 0) - (dq.indexOf('S')>=0 ? 1 : 0);
+      var c1 = Math.sin(dd*D)*tx + Math.cos(dd*D)*ty; if (c1 < 0) dd = n360(s-90); }
+    return {dip:dip, dipdir:dd, strike:n360(dd-90)}; }
+  function parseAttitude(txt){ var q = parseQuadrant(txt); if (q) return q;
+    var m = /^\s*(\d+(?:\.\d+)?)\s*[\/,; ]\s*(\d+(?:\.\d+)?)\s*$/.exec(txt || ''); if (!m) return null;
+    var dip=+m[1], dd=+m[2]; if (dip > 90 || dd > 360) return null; return {dip:dip, dipdir:n360(dd), strike:n360(dd-90)}; }
+
+  return {D:D, R2D:R2D, n360:n360, clamp:clamp, dot:dot, cross:cross, len:len, unit:unit, neg:neg, angDiff:angDiff, axAngle:axAngle,
+    rot:rot, col:col, lineVec:lineVec, normalUp:normalUp, poleVec:poleVec, planeOf:planeOf, lineOf:lineOf, strikeOf:strikeOf,
+    phonePlane:phonePlane, phoneLine:phoneLine, rake:rake, apparentDip:apparentDip, project:project, unproject:unproject,
+    greatCircle:greatCircle, eigen:eigen, fisher:fisher, density:density, KAPPA:KAPPA, UNI:UNI, findSets:findSets, fleuty:fleuty,
+    plungeWord:plungeWord, kinematics:kinematics, tm:tm, grid:grid, ELL:ELL, parseQuadrant:parseQuadrant, parseAttitude:parseAttitude};
+})();
+if (typeof module !== 'undefined') module.exports = GM;
+</script>
+
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+var KEY = 'outcrop-fieldbook-v1';
+var PLANES = ['Bedding','Foliation','Cleavage','Joint','Fault','Vein','Shear zone','Contact','Axial plane','Dyke'];
+var LINES = ['Lineation','Fold axis','Slickenline','Intersection','Mineral lineation','Stretching lineation'];
+var ROCKS = ['Sandstone','Siltstone','Mudstone','Shale','Conglomerate','Limestone','Dolomite','Chert','BIF','Quartzite','Slate','Phyllite','Schist','Gneiss','Marble','Amphibolite','Greenstone','Granite','Granodiorite','Diorite','Gabbro','Dolerite','Basalt','Andesite','Rhyolite','Komatiite','Peridotite','Serpentinite','Tuff','Diamictite'];
+var inViewer = !!(window.claude && typeof window.claude.use === 'function');
+var dlCap = inViewer ? window.claude.use('downloads').catch(function(){ return null; }) : Promise.resolve(null);
+
+/* ---------- state ---------- */
+var state = {recs:[], features:[], units:[], overlays:[], seq:0, station:'ST-001', exSeeded:false,
+  set:{decl:0, north:'true', proj:'utm', offE:0, offN:0, hold:2, win:1, autoRec:false, walkStep:10},
+  ui:{tab:'measure', mode:'plane', type:'Bedding', ltype:'Slickenline', proj:'area', show:'pd', aTypes:null, aStation:''}};
+function load(){ try{ var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.recs){ state.recs = s.recs; state.seq = s.seq||0; state.station = s.station||'ST-001'; state.exSeeded = !!s.exSeeded; state.features = s.features || []; state.units = s.units || []; state.overlays = s.overlays || []; state.mapSeeded = !!s.mapSeeded;
+  Object.assign(state.set, s.set||{}); Object.assign(state.ui, s.ui||{}); } }catch(e){}
+  if (!state.exSeeded && !state.recs.length){ seedExamples(); state.exSeeded = true; }
+  if (!state.mapSeeded){ if (!state.features.length && state.recs.some(function(r){ return r.src === 'example'; })) seedExampleMap(); state.mapSeeded = true; } }
+var saveWarned = false;
+function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){ if (!saveWarned){ saveWarned = true; toast('This browser is not keeping data. Export your readings before closing.'); } } }
+
+/* ---------- photos (IndexedDB) ---------- */
+var PhotoDB = (function(){ var dbp = null, mem = {};
+  function open(){ if (dbp) return dbp; dbp = new Promise(function(res){ try{ var r = indexedDB.open('outcrop-photos', 1);
+      r.onupgradeneeded = function(){ r.result.createObjectStore('p'); }; r.onsuccess = function(){ res(r.result); }; r.onerror = function(){ res(null); };
+    }catch(e){ res(null); } }); return dbp; }
+  function tx(mode, fn){ return open().then(function(db){ if (!db) return fn(null); return new Promise(function(res){ try{ var t = db.transaction('p', mode), st = t.objectStore('p'), out = fn(st); t.oncomplete = function(){ res(out && out.result !== undefined ? out.result : out); }; t.onerror = function(){ res(null); }; }catch(e){ res(null); } }); }); }
+  return {
+    put: function(id, blob){ mem[id] = blob; return tx('readwrite', function(st){ return st ? st.put(blob, id) : null; }); },
+    get: function(id){ if (mem[id]) return Promise.resolve(mem[id]); return tx('readonly', function(st){ return st ? st.get(id) : null; }); },
+    del: function(id){ delete mem[id]; return tx('readwrite', function(st){ return st ? st.delete(id) : null; }); }
+  }; })();
+
+/* ---------- helpers ---------- */
+function pad3(x){ x = Math.round(x) % 360; return ('00' + x).slice(-3); }
+function pad2(x){ return ('0' + Math.round(x)).slice(-2); }
+function fmtPlane(r){ return pad2(r.dip) + '/' + pad3(r.dipdir); }
+function fmtLine(t,p){ return pad2(p) + '→' + pad3(t); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+var toastT = null;
+function toast(msg){ var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function(){ t.hidden = true; }, 2600); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function isLineType(t){ return LINES.indexOf(t) >= 0 || /lineation|axis|slicken|intersection|striation|hinge/i.test(t || ''); }
+function nextStation(s){ var m = /^(.*?)(\d+)$/.exec(s || ''); if (!m) return (s || 'ST-') + '-002'; var n = String(+m[2] + 1); while (n.length < m[2].length) n = '0' + n; return m[1] + n; }
+function recVectors(r){ var o = {}; if (r.dip != null && r.dipdir != null) o.pole = GM.poleVec(r.dip, r.dipdir); if (r.trend != null && r.plunge != null) o.line = GM.lineVec(r.trend, r.plunge); return o; }
+function northWord(){ return state.set.north === 'grid' ? 'grid' : state.set.north === 'mag' ? 'magnetic' : 'true'; }
+
+/* ---------- example data (clearly marked) ---------- */
+function seedExamples(){ var seed = 42; function rnd(){ seed = (seed*16807) % 2147483647; return seed/2147483647; }
+  function gauss(){ return Math.sqrt(-2*Math.log(rnd()+1e-12))*Math.cos(2*Math.PI*rnd()); }
+  function jitter(v, deg){ var s = deg*GM.D; return GM.unit([v[0]+gauss()*s, v[1]+gauss()*s, v[2]+gauss()*s]); }
+  var axis = GM.lineVec(285, 12), up = [0,0,1], b = GM.unit(GM.cross(axis, up)), c = GM.cross(b, axis);
+  var lat0 = -30.7485, lon0 = 121.4620, t0 = Date.parse('2026-10-06T08:30:00+08:00'), recs = [];
+  function add(st, k, r){ var la = lat0 + k*0.00042 + gauss()*0.00005, lo = lon0 + k*0.00031 + gauss()*0.00005;
+    recs.push(Object.assign({id:'ex'+recs.length, t:new Date(t0 + recs.length*95000).toISOString(), station:st, lat:la, lon:lo, h:372 + gauss()*3, acc:4 + rnd()*4,
+      method:'example', src:'example', decl:0, north:'true', rock:'', note:''}, r)); }
+  for (var i=0;i<46;i++){ var k = Math.floor(i/5), st = 'EX-' + ('00'+(k+1)).slice(-3), psi = (i % 2 ? 1 : -1)*(40 + gauss()*7)*GM.D;
+    var n = jitter([Math.cos(psi)*c[0]+Math.sin(psi)*b[0], Math.cos(psi)*c[1]+Math.sin(psi)*b[1], Math.cos(psi)*c[2]+Math.sin(psi)*b[2]], 4);
+    var p = GM.planeOf(n); add(st, k, {type:'Bedding', kind:'plane', dip:+p.dip.toFixed(1), dipdir:+p.dipdir.toFixed(1), rock: i % 3 ? 'Sandstone' : 'Siltstone', spread:+(0.4+rnd()).toFixed(1)}); }
+  for (i=0;i<14;i++){ var pj = GM.planeOf(jitter(GM.normalUp(82, 15), 6)); add('EX-00' + (1 + i % 9), i % 9, {type:'Joint', kind:'plane', dip:+pj.dip.toFixed(1), dipdir:+pj.dipdir.toFixed(1), rock:'Sandstone'}); }
+  for (i=0;i<9;i++){ var L = GM.lineOf(jitter(axis, 5)); add('EX-00' + (1 + i), i, {type:'Fold axis', kind:'line', trend:+L.trend.toFixed(1), plunge:+L.plunge.toFixed(1)}); }
+  recs[0].note = 'Example: thin-bedded sandstone, cross-bedding tops to NE'; recs[46].note = 'Example: joint set, quartz-filled in places';
+  state.recs = recs; }
+
+/* ---------- sensors ---------- */
+var S = {on:false, src:'', gotAbs:false, iosOff:null, buf:[], last:null, steadySince:0, lastAuto:null, armed:true, pendingPlane:null, gps:null, watch:null, lastT:0};
+function onAbs(e){ if (e.alpha == null) return; S.gotAbs = true; feed(e.alpha, e.beta, e.gamma, 'absolute'); }
+function onRel(e){ if (S.gotAbs || e.beta == null) return;
+  if (e.webkitCompassHeading != null && e.alpha != null){
+    var absA = GM.n360(360 - e.webkitCompassHeading), off = GM.n360(absA - e.alpha), flat = Math.abs(e.beta) < 35 && Math.abs(e.gamma) < 35;
+    if (S.iosOff == null) S.iosOff = off; else if (flat){ var d = ((off - S.iosOff + 540) % 360) - 180; S.iosOff = GM.n360(S.iosOff + 0.2*d); }
+    feed(e.alpha + S.iosOff, e.beta, e.gamma, 'ios');
+  } else if (e.alpha != null){ feed(e.alpha, e.beta, e.gamma, e.absolute ? 'absolute' : 'relative'); } }
+function feed(a, b, g, src){ var R = GM.rot(a, b, g), now = performance.now(); S.src = src; S.lastT = now;
+  S.buf.push({t:now, n:GM.col(R,2), y:GM.col(R,1)}); var keep = Math.max(0.4, state.set.win) * 1000 + 300;
+  while (S.buf.length && now - S.buf[0].t > keep) S.buf.shift(); }
+function meanOf(key, sinceMs){ var now = performance.now(), arr = S.buf.filter(function(s){ return now - s.t <= sinceMs; }); if (!arr.length) return null;
+  var ref = arr[arr.length-1][key], sum = [0,0,0];
+  arr.forEach(function(s){ var v = s[key], w = GM.dot(v, ref) < 0 ? GM.neg(v) : v; sum[0]+=w[0]; sum[1]+=w[1]; sum[2]+=w[2]; });
+  var m = GM.unit(sum), spread = 0; arr.forEach(function(s){ spread = Math.max(spread, GM.axAngle(s[key], m)); });
+  return {v:m, spread:spread, n:arr.length}; }
+function correctAz(az){ var a = az; if (state.set.north !== 'mag') a += +state.set.decl || 0;
+  if (state.set.north === 'grid' && S.gps){ var g = GM.grid(S.gps.lat, S.gps.lon, state.set.proj === 'none' ? 'utm' : state.set.proj); if (g) a -= g.conv; }
+  return GM.n360(a); }
+function currentReading(){ var key = activeKind() === 'line' ? 'y' : 'n', m = meanOf(key, state.set.win*1000); if (!m) return null;
+  if (key === 'n'){ var p = GM.planeOf(m.v); return {kind:'plane', dip:p.dip, dipdir:correctAz(p.dipdir), spread:m.spread, n:m.n}; }
+  var l = GM.lineOf(m.v); return {kind:'line', trend:correctAz(l.trend), plunge:l.plunge, spread:m.spread, n:m.n}; }
+function activeKind(){ var md = state.ui.mode; if (md === 'pl') return S.pendingPlane ? 'line' : 'plane'; return md; }
+
+function startCompass(){
+  var go = function(){ window.addEventListener('deviceorientationabsolute', onAbs, true); window.addEventListener('deviceorientation', onRel, true);
+    S.on = true; $('btnStart').textContent = 'Compass on'; $('btnStart').disabled = true; startGPS(); keepAwake(); requestAnimationFrame(loop);
+    setTimeout(function(){ if (!S.lastT) showSensorProblem('none'); }, 2500); };
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+    DeviceOrientationEvent.requestPermission().then(function(r){ if (r === 'granted') go(); else showSensorProblem('denied'); }).catch(function(){ showSensorProblem('denied'); });
+  } else if (typeof DeviceOrientationEvent === 'undefined'){ showSensorProblem('none'); } else go(); }
+function showSensorProblem(kind){ var b = $('sensorBanner'); b.hidden = false; $('btnStart').disabled = false; $('btnStart').textContent = 'Try again';
+  var where = inViewer ? ' This page is open inside the Claude viewer, which does not pass motion sensors or GPS to pages. Open the app file in Chrome or Safari on your phone to measure (see Settings ▸ Install on your phone).' : ' Check that the browser is allowed to use motion sensors and that the page is opened over https.';
+  b.innerHTML = '<b>' + (kind === 'denied' ? 'Motion sensors were refused.' : 'No compass readings from this device.') + '</b>' + esc(where) + ' You can still type readings with <b>Type it in</b>.'; }
+function startGPS(){ if (S.watch != null) return; if (!navigator.geolocation){ setGpsChip(); return; }
+  try{ S.watch = navigator.geolocation.watchPosition(function(p){ S.gps = {lat:p.coords.latitude, lon:p.coords.longitude, h:p.coords.altitude, acc:p.coords.accuracy, t:Date.now()}; setGpsChip(); onGpsFix(); },
+    function(){ S.gps = null; setGpsChip('refused'); }, {enableHighAccuracy:true, maximumAge:5000, timeout:30000}); }catch(e){ setGpsChip('refused'); } }
+function setGpsChip(why){ var c = $('gpsChip'); if (S.gps){ c.className = 'chip-stat ' + (S.gps.acc <= 15 ? 'ok' : ''); c.textContent = 'GPS ±' + Math.round(S.gps.acc) + ' m'; }
+  else { c.className = 'chip-stat off'; c.textContent = why === 'refused' ? 'GPS refused' : 'GPS off'; } }
+var wake = null;
+function keepAwake(){ try{ if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function(w){ wake = w; }).catch(function(){}); }catch(e){} }
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible' && S.on) keepAwake(); });
+
+/* ---------- measure view ---------- */
+var lastDraw = 0;
+function loop(t){ if (!S.on) return; if (t - lastDraw > 90){ lastDraw = t; updateLive(); } requestAnimationFrame(loop); }
+function updateLive(){ var r = S.lastT ? currentReading() : null; renderReadout(r); drawDial(r);
+  var stEl = $('steady'), fill = $('steadyFill'), txt = $('steadyTxt');
+  if (!r){ fill.style.width = '0'; txt.textContent = S.on ? 'Waiting for the sensors…' : 'Compass not started'; $('btnRecord').disabled = !S.on; return; }
+  var steady = r.spread < 1.5 && r.n >= 4, q = GM.clamp(1 - r.spread/8, 0, 1);
+  fill.style.width = Math.round(q*100) + '%'; stEl.classList.toggle('is-steady', steady);
+  txt.textContent = (steady ? 'Steady' : 'Hold still') + ' · ±' + r.spread.toFixed(1) + '°' + (S.src === 'relative' ? ' · azimuth not tied to north' : '');
+  $('btnRecord').disabled = false;
+  var now = performance.now();
+  if (steady){ if (!S.steadySince) S.steadySince = now; } else S.steadySince = 0;
+  if (!S.armed && S.lastAuto){ var v = activeKind() === 'line' ? GM.lineVec(r.trend, r.plunge) : GM.normalUp(r.dip, r.dipdir); if (GM.axAngle(v, S.lastAuto) > 12) S.armed = true; }
+  if (state.set.autoRec && steady && S.armed && S.steadySince && now - S.steadySince > state.set.hold*1000){ S.armed = false; S.steadySince = 0; recordFromPhone(r, true); } }
+function renderReadout(r){ var k = activeKind();
+  if (k === 'line'){ $('rdCap').textContent = 'plunge → trend (' + northWord() + ')';
+    if (!r){ $('rdA').textContent = '--'; $('rdB').textContent = '---'; $('rdSub').textContent = 'Lay the long edge of the phone along the line'; return; }
+    $('rdA').textContent = pad2(r.plunge); $('rdB').textContent = pad3(r.trend); $('rdSub').textContent = GM.plungeWord(r.plunge);
+    if (S.pendingPlane){ var rk = GM.rake(S.pendingPlane.dip, S.pendingPlane.dipdir, r.trend, r.plunge); $('rdSub').textContent = 'rake ' + Math.round(rk.rake) + '° · ' + Math.round(rk.misfit) + '° off the plane'; }
+  } else { $('rdCap').textContent = 'dip / dip direction (' + northWord() + ')';
+    if (!r){ $('rdA').textContent = '--'; $('rdB').textContent = '---'; $('rdSub').textContent = 'Lay the back of the phone flat on the surface'; return; }
+    $('rdA').textContent = pad2(r.dip); $('rdB').textContent = pad3(r.dipdir); $('rdSub').textContent = 'strike ' + pad3(GM.strikeOf(r.dipdir)) + ' (right-hand rule)'; } }
+function drawDial(r){ var cv = $('dial'), dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 200; if (cv.width !== Math.round(W*dpr)){ cv.width = Math.round(W*dpr); cv.height = Math.round(W*dpr); }
+  var ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,W);
+  var cx = W/2, cy = W/2, R = W/2 - 18, ink = cssv('--ink'), mut = cssv('--muted'), ln = cssv('--line');
+  ctx.fillStyle = cssv('--bg'); ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.fill(); ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.stroke();
+  for (var a=0;a<360;a+=10){ var big = a % 90 === 0, r1 = R - (big ? 10 : a % 30 === 0 ? 7 : 4), s = Math.sin(a*GM.D), c = Math.cos(a*GM.D);
+    ctx.strokeStyle = big ? ink : mut; ctx.lineWidth = big ? 2 : 1; ctx.beginPath(); ctx.moveTo(cx + s*r1, cy - c*r1); ctx.lineTo(cx + s*R, cy - c*R); ctx.stroke(); }
+  ctx.font = '600 13px ' + cssv('--f-disp'); ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  [['N',0],['E',90],['S',180],['W',270]].forEach(function(p){ var s = Math.sin(p[1]*GM.D), c = Math.cos(p[1]*GM.D); ctx.fillStyle = p[0] === 'N' ? cssv('--accent') : ink; ctx.fillText(p[0], cx + s*(R+10), cy - c*(R+10)); });
+  ctx.strokeStyle = ln; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx,cy,R*0.5,0,7); ctx.stroke();
+  if (!r) return;
+  if (r.kind === 'plane'){ var st = GM.strikeOf(r.dipdir)*GM.D, L = R*0.78, sx = Math.sin(st), sy = Math.cos(st);
+    ctx.strokeStyle = cssv('--plane'); ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx - sx*L, cy + sy*L); ctx.lineTo(cx + sx*L, cy - sy*L); ctx.stroke();
+    var dd = r.dipdir*GM.D, T = R*0.26; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.sin(dd)*T, cy - Math.cos(dd)*T); ctx.stroke();
+    ctx.fillStyle = ink; ctx.font = '700 18px ' + cssv('--f-disp'); ctx.fillText(Math.round(r.dip), cx + Math.sin(dd)*(T+16), cy - Math.cos(dd)*(T+16));
+    var h = Math.sin(r.dip*GM.D)*R*0.9; ctx.fillStyle = cssv('--accent'); ctx.beginPath(); ctx.arc(cx - Math.sin(dd)*h, cy + Math.cos(dd)*h, 5, 0, 7); ctx.fill();
+  } else { var tr = r.trend*GM.D, L2 = R*0.8*Math.cos(r.plunge*GM.D*0.85) + R*0.12; ctx.strokeStyle = cssv('--linec'); ctx.fillStyle = cssv('--linec'); ctx.lineWidth = 5; ctx.lineCap = 'round';
+    var ex = cx + Math.sin(tr)*L2, ey = cy - Math.cos(tr)*L2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ex + Math.sin(tr)*10, ey - Math.cos(tr)*10); ctx.lineTo(ex + Math.sin(tr+2.4)*10, ey - Math.cos(tr+2.4)*10); ctx.lineTo(ex + Math.sin(tr-2.4)*10, ey - Math.cos(tr-2.4)*10); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = ink; ctx.font = '700 18px ' + cssv('--f-disp'); ctx.fillText(Math.round(r.plunge), cx - Math.sin(tr)*22, cy + Math.cos(tr)*22); } }
+
+function positionNow(){ if (!S.gps) return {};
+  var o = {lat:S.gps.lat, lon:S.gps.lon, h:S.gps.h, acc:S.gps.acc}; return o; }
+function baseRecord(){ return {id:uid(), t:new Date().toISOString(), station:$('station').value.trim() || state.station, rock:$('rock').value.trim(), note:$('note').value.trim(),
+  decl:+state.set.decl || 0, north:state.set.north, src:'user'}; }
+var pendingPhoto = null;
+function recordFromPhone(r, auto){ var k = activeKind();
+  if (state.ui.mode === 'pl' && k === 'plane'){ S.pendingPlane = {dip:r.dip, dipdir:r.dipdir, spread:r.spread}; buzz(); updatePlStep(); toast('Plane kept. Now lay the long edge along the line.'); return; }
+  var rec = Object.assign(baseRecord(), positionNow(), {method:'phone', spread:+r.spread.toFixed(1), samples:r.n, sensor:S.src});
+  if (state.ui.mode === 'pl'){ var p = S.pendingPlane, rk = GM.rake(p.dip, p.dipdir, r.trend, r.plunge);
+    Object.assign(rec, {kind:'pl', type:state.ui.type, ltype:state.ui.ltype, dip:+p.dip.toFixed(1), dipdir:+p.dipdir.toFixed(1), trend:+r.trend.toFixed(1), plunge:+r.plunge.toFixed(1), rake:+rk.rake.toFixed(0), misfit:+rk.misfit.toFixed(0)});
+    S.pendingPlane = null; updatePlStep(); if (rk.misfit > 15) toast('Line is ' + Math.round(rk.misfit) + '° off the plane. Check both.'); }
+  else if (r.kind === 'plane') Object.assign(rec, {kind:'plane', type:state.ui.type, dip:+r.dip.toFixed(1), dipdir:+r.dipdir.toFixed(1)});
+  else Object.assign(rec, {kind:'line', type:state.ui.type, trend:+r.trend.toFixed(1), plunge:+r.plunge.toFixed(1)});
+  addRecord(rec); buzz(); if (auto) toast('Recorded ' + describe(rec)); }
+function buzz(){ try{ if (navigator.vibrate) navigator.vibrate(60); }catch(e){} }
+function addRecord(rec){ if (pendingPhoto){ rec.photo = true; PhotoDB.put(rec.id, pendingPhoto); pendingPhoto = null; $('photoLbl').textContent = 'Add photo'; }
+  state.seq++; state.recs.push(rec); state.station = rec.station; persist(); $('note').value = ''; renderRecent(); $('btnUndo').hidden = false; }
+function describe(r){ if (r.kind === 'line') return r.type + ' ' + fmtLine(r.trend, r.plunge); var s = r.type + ' ' + fmtPlane(r); if (r.kind === 'pl') s += ' + ' + fmtLine(r.trend, r.plunge) + ' (rake ' + r.rake + '°)'; return s; }
+function symSvg(r){ var col = r.kind === 'line' ? 'var(--linec)' : 'var(--plane)';
+  if (r.kind === 'line'){ var t = r.trend*GM.D, x = 17 + Math.sin(t)*12, y = 17 - Math.cos(t)*12;
+    return '<svg class="sym" viewBox="0 0 34 34" aria-hidden="true"><line x1="17" y1="17" x2="' + x.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="' + col + '" stroke-width="3" stroke-linecap="round"/><circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3" fill="' + col + '"/></svg>'; }
+  var s = GM.strikeOf(r.dipdir)*GM.D, d = r.dipdir*GM.D, sx = Math.sin(s)*13, sy = -Math.cos(s)*13, dx = Math.sin(d)*6, dy = -Math.cos(d)*6;
+  return '<svg class="sym" viewBox="0 0 34 34" aria-hidden="true"><line x1="' + (17-sx).toFixed(1) + '" y1="' + (17-sy).toFixed(1) + '" x2="' + (17+sx).toFixed(1) + '" y2="' + (17+sy).toFixed(1) + '" stroke="' + col + '" stroke-width="3" stroke-linecap="round"/><line x1="17" y1="17" x2="' + (17+dx).toFixed(1) + '" y2="' + (17+dy).toFixed(1) + '" stroke="' + col + '" stroke-width="3" stroke-linecap="round"/>' + (r.kind === 'pl' ? '<circle cx="' + (17 + Math.sin(r.trend*GM.D)*9).toFixed(1) + '" cy="' + (17 - Math.cos(r.trend*GM.D)*9).toFixed(1) + '" r="3" fill="var(--linec)"/>' : '') + '</svg>'; }
+function recRow(r){ var t = new Date(r.t), when = isNaN(t) ? '' : t.toLocaleDateString(undefined,{day:'numeric',month:'short'}) + ' ' + t.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+  var val = r.kind === 'line' ? fmtLine(r.trend, r.plunge) : fmtPlane(r) + (r.kind === 'pl' ? '<br>' + fmtLine(r.trend, r.plunge) : '');
+  var meta = [r.station, r.rock, when, r.method === 'typed' ? 'typed' : r.spread != null ? '±' + r.spread + '°' : ''].filter(Boolean).join(' · ');
+  return '<li><button type="button" class="rec" data-id="' + esc(r.id) + '">' + symSvg(r) + '<span class="min0"><span class="t">' + esc(r.type) + (r.src === 'example' ? ' <span class="tag ex">example</span>' : '') + (r.photo ? ' <span class="tag">photo</span>' : '') + '</span><span class="m">' + esc(meta) + (r.note ? ' — ' + esc(r.note) : '') + '</span></span><span class="v">' + val + '</span></button></li>'; }
+function renderRecent(){ var list = state.recs.slice(-5).reverse(); $('recent').innerHTML = list.length ? list.map(recRow).join('') : '<li class="muted small">Nothing recorded yet.</li>'; }
+function updatePlStep(){ var el = $('plStep'); if (state.ui.mode !== 'pl'){ el.hidden = true; return; } el.hidden = false;
+  el.textContent = S.pendingPlane ? 'Step 2 of 2 · plane ' + fmtPlane(S.pendingPlane) + ' kept — now the line on it' : 'Step 1 of 2 · the plane (fault, foliation…)';
+  $('btnRecord').textContent = S.pendingPlane ? 'Record line' : 'Record plane'; renderTypeChips(); }
+function renderTypeChips(){ var line = activeKind() === 'line', list = line ? LINES : PLANES, cur = line && state.ui.mode === 'pl' ? state.ui.ltype : state.ui.type;
+  if (list.indexOf(cur) < 0){ cur = list[0]; if (line && state.ui.mode === 'pl') state.ui.ltype = cur; else state.ui.type = cur; }
+  $('typeChips').innerHTML = list.map(function(t){ return '<button type="button" class="chip' + (line ? ' ln' : '') + '" aria-pressed="' + (t === cur) + '" data-t="' + esc(t) + '">' + esc(t) + '</button>'; }).join(''); }
+function setMode(m){ state.ui.mode = m; S.pendingPlane = null; document.querySelectorAll('#modeSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.mode === m); });
+  if (m === 'pl' && state.ui.type === 'Bedding') state.ui.type = 'Fault';
+  if (m === 'line' && !isLineType(state.ui.type)) state.ui.type = 'Lineation'; if (m !== 'line' && isLineType(state.ui.type)) state.ui.type = 'Bedding';
+  $('btnRecord').textContent = 'Record'; updatePlStep(); renderTypeChips(); persist(); updateLive(); }
+function setNorthLabel(){ var s = state.set; $('northLbl').textContent = (s.north === 'grid' ? 'Grid north' : s.north === 'mag' ? 'Magnetic north' : 'True north') + (s.north !== 'mag' ? ' · decl ' + (+s.decl).toFixed(1) + '°' : ''); }
+
+/* ---------- sheets ---------- */
+function openSheet(title, html, onReady){ var host = $('sheetHost'); host.innerHTML = '<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="row-between"><h2>' + esc(title) + '</h2><button class="iconbtn" id="shClose" aria-label="Close">✕</button></div>' + html + '</div></div>';
+  $('shClose').onclick = closeSheet; $('scrim').addEventListener('click', function(e){ if (e.target.id === 'scrim') closeSheet(); }); if (onReady) onReady(); }
+function closeSheet(){ $('sheetHost').innerHTML = ''; }
+function typeOptions(sel, kind){ var list = kind === 'line' ? LINES : PLANES; if (sel && list.indexOf(sel) < 0) list = list.concat([sel]);
+  return list.map(function(t){ return '<option' + (t === sel ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join(''); }
+function recordSheet(rec){ var isNew = !rec, r = rec || {kind: state.ui.mode === 'line' ? 'line' : state.ui.mode === 'pl' ? 'pl' : 'plane', type: state.ui.type, station: $('station').value.trim() || state.station, rock: $('rock').value.trim()};
+  var pos = r.lat != null ? r : (isNew ? positionNow() : {}), g = GM.grid(pos.lat, pos.lon, state.set.proj);
+  var html = '<div class="seg" id="rkSeg"><button type="button" data-k="plane" aria-pressed="' + (r.kind==='plane') + '">Plane</button><button type="button" data-k="line" aria-pressed="' + (r.kind==='line') + '">Line</button><button type="button" data-k="pl" aria-pressed="' + (r.kind==='pl') + '">Plane + line</button></div>'
+   + '<div class="grid2"><label class="f">Structure<select id="rType">' + typeOptions(r.type, r.kind === 'line' ? 'line' : 'plane') + '</select></label><label class="f">Station<input type="text" id="rSt" value="' + esc(r.station || '') + '"></label></div>'
+   + '<div id="rPlane"><label class="f">Plane — dip/dip dir, or quadrant (N45E/30SE)<input type="text" id="rAtt" autocomplete="off" value="' + (r.dip != null ? esc(fmtPlane(r)) : '') + '" placeholder="35/120"></label><p class="small muted" id="rAttOut" style="margin:4px 0 0"></p></div>'
+   + '<div id="rLine" class="grid2"><label class="f">Plunge<input type="number" id="rPl" min="0" max="90" step="0.1" value="' + (r.plunge != null ? r.plunge : '') + '"></label><label class="f">Trend<input type="number" id="rTr" min="0" max="360" step="0.1" value="' + (r.trend != null ? r.trend : '') + '"></label></div>'
+   + '<div id="rLtypeWrap"><label class="f">Line type<select id="rLtype">' + typeOptions(r.ltype || 'Slickenline', 'line') + '</select></label></div>'
+   + '<div class="grid2"><label class="f">Rock<input type="text" id="rRock" list="rockList" value="' + esc(r.rock || '') + '"></label><label class="f">Taken<select id="rMeth"><option value="typed">Typed / analogue compass</option><option value="phone"' + (r.method === 'phone' ? ' selected' : '') + '>Phone</option></select></label></div>'
+   + '<label class="f">Note<textarea id="rNote">' + esc(r.note || '') + '</textarea></label>'
+   + '<h3>Position</h3><div class="grid2"><label class="f">Latitude<input type="number" id="rLat" step="any" value="' + (pos.lat != null ? (+pos.lat).toFixed(6) : '') + '"></label><label class="f">Longitude<input type="number" id="rLon" step="any" value="' + (pos.lon != null ? (+pos.lon).toFixed(6) : '') + '"></label></div>'
+   + '<div class="grid2"><label class="f">Easting<input type="number" id="rE" step="any" value="' + (r.E != null ? r.E : g ? (g.E + (+state.set.offE||0)).toFixed(1) : '') + '"></label><label class="f">Northing<input type="number" id="rN" step="any" value="' + (r.N != null ? r.N : g ? (g.N + (+state.set.offN||0)).toFixed(1) : '') + '"></label></div>'
+   + '<p class="small muted" style="margin:0">Easting/northing are worked out from latitude/longitude on export (' + esc(g ? g.label : projLabel()) + '). Type them only for points without latitude/longitude.</p>'
+   + (pos.lat != null ? '<div class="row"><a class="btn" href="' + gmapsUrl(pos.lat, pos.lon) + '" target="_blank" rel="noopener">Open in Google Maps</a></div>' : '')
+   + '<div id="rPhoto"></div><div class="acts">' + (isNew ? '' : '<button class="btn danger" id="rDel" type="button">Delete</button>') + '<button class="btn" id="rCancel" type="button">Cancel</button><button class="btn primary" id="rSave" type="button">Save</button></div>';
+  openSheet(isNew ? 'Type a reading' : 'Reading', html, function(){ var kind = r.kind;
+    function sync(){ $('rPlane').hidden = kind === 'line'; $('rLine').hidden = kind === 'plane'; $('rLtypeWrap').hidden = kind !== 'pl';
+      document.querySelectorAll('#rkSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.k === kind); });
+      var cur = $('rType').value; $('rType').innerHTML = typeOptions(kind === 'line' ? (isLineType(cur) ? cur : 'Lineation') : (isLineType(cur) ? 'Bedding' : cur), kind === 'line' ? 'line' : 'plane'); }
+    document.querySelectorAll('#rkSeg button').forEach(function(b){ b.onclick = function(){ kind = b.dataset.k; sync(); }; }); sync();
+    function att(){ var p = GM.parseAttitude($('rAtt').value); $('rAttOut').textContent = $('rAtt').value.trim() ? (p ? 'Reads as ' + fmtPlane(p) + ' · strike ' + pad3(p.strike) + ' (RHR)' : 'Not read. Use 35/120 or N45E/30SE.') : ''; return p; }
+    $('rAtt').oninput = att; att();
+    if (r.photo) PhotoDB.get(r.id).then(function(b){ if (b){ var u = URL.createObjectURL(b); $('rPhoto').innerHTML = '<img src="' + u + '" alt="Outcrop photo" style="border-radius:8px">'; } });
+    $('rCancel').onclick = closeSheet;
+    if ($('rDel')) $('rDel').onclick = function(){ var b = $('rDel'); if (b.dataset.sure){ state.recs = state.recs.filter(function(x){ return x.id !== r.id; }); if (r.photo) PhotoDB.del(r.id); persist(); closeSheet(); refreshAll(); toast('Deleted'); } else { b.dataset.sure = '1'; b.textContent = 'Tap again to delete'; } };
+    $('rSave').onclick = function(){ var out = Object.assign({}, rec || baseRecord(), {kind:kind, type:$('rType').value, station:$('rSt').value.trim(), rock:$('rRock').value.trim(), note:$('rNote').value.trim(), method:$('rMeth').value});
+      if (out.src === 'example') out.src = 'user';
+      delete out.dip; delete out.dipdir; delete out.trend; delete out.plunge; delete out.rake; delete out.misfit; delete out.ltype;
+      if (kind !== 'line'){ var p = att(); if (!p){ toast('Type the plane as 35/120 or N45E/30SE'); return; } out.dip = +p.dip.toFixed(1); out.dipdir = +p.dipdir.toFixed(1); }
+      if (kind !== 'plane'){ var pl = parseFloat($('rPl').value), tr = parseFloat($('rTr').value); if (!(pl >= 0 && pl <= 90) || !(tr >= 0 && tr <= 360)){ toast('Plunge 0–90 and trend 0–360'); return; } out.plunge = pl; out.trend = GM.n360(tr); }
+      if (kind === 'pl'){ var rk = GM.rake(out.dip, out.dipdir, out.trend, out.plunge); out.rake = Math.round(rk.rake); out.misfit = Math.round(rk.misfit); out.ltype = $('rLtype').value; }
+      var la = parseFloat($('rLat').value), lo = parseFloat($('rLon').value), E = parseFloat($('rE').value), N = parseFloat($('rN').value);
+      out.lat = isFinite(la) ? la : null; out.lon = isFinite(lo) ? lo : null; out.E = !isFinite(la) && isFinite(E) ? E : null; out.N = !isFinite(la) && isFinite(N) ? N : null;
+      if (out.lat == null){ delete out.h; delete out.acc; }
+      if (isNew){ addRecord(out); } else { var i = state.recs.findIndex(function(x){ return x.id === r.id; }); if (i >= 0) state.recs[i] = out; persist(); }
+      closeSheet(); refreshAll(); toast(isNew ? 'Saved ' + describe(out) : 'Updated'); }; }); }
+function projLabel(){ var p = state.set.proj; return p === 'utm' ? 'UTM, zone from longitude' : p === 'none' ? 'no grid' : 'MUTM ' + p.slice(4) + '°E (Everest 1830)'; }
+
+function settingsSheet(){ var s = state.set;
+  var html = '<div class="grid2"><label class="f">North reference<select id="sNorth"><option value="true">True north</option><option value="mag">Magnetic north</option><option value="grid">Grid north</option></select></label>'
+   + '<label class="f">Declination (° east +)<input type="number" id="sDecl" step="0.1" value="' + s.decl + '"></label></div>'
+   + '<p class="small muted" style="margin:0">Look up today\'s declination for your area (NOAA or Geoscience Australia calculators) and check the phone against an analogue compass on a known bearing each day.</p>'
+   + '<label class="f">Map grid for exports<select id="sProj"><option value="utm">UTM, WGS 84 (zone from longitude; ≈ MGA2020 in Australia)</option><option value="mutm81">Nepal MUTM 81°E (Everest 1830)</option><option value="mutm84">Nepal MUTM 84°E (Everest 1830)</option><option value="mutm87">Nepal MUTM 87°E (Everest 1830)</option><option value="none">None (latitude/longitude only)</option></select></label>'
+   + '<div class="grid2"><label class="f">Shift easting (m)<input type="number" id="sOffE" step="0.1" value="' + s.offE + '"></label><label class="f">Shift northing (m)<input type="number" id="sOffN" step="0.1" value="' + s.offN + '"></label></div>'
+   + '<p class="small muted" style="margin:0">A constant shift added to exported eastings/northings, for matching a local datum measured on known stations.</p>'
+   + '<div class="grid2"><label class="f">Average over (s)<input type="number" id="sWin" min="0.3" max="5" step="0.1" value="' + s.win + '"></label><label class="f">Hold steady for (s) before auto-record<input type="number" id="sHold" min="0.5" max="10" step="0.5" value="' + s.hold + '"></label></div>'
+   + '<label class="f">Walk-it spacing (m)<input type="number" id="sWalk" min="2" max="200" step="1" value="' + (s.walkStep || 10) + '"></label>'
+   + '<details class="tool"><summary>Install on your phone</summary><div class="in small"><p style="margin:0">The compass and GPS need the app open in the phone\'s own browser. Put the app folder (index.html, sw.js, manifest.webmanifest, icon) on any https host, for example GitHub Pages or Netlify Drop, open the link in Chrome (Android) or Safari (iPhone), then choose <b>Add to Home screen</b>. After the first visit it works offline. Readings stay on the phone, so export a backup after each day.</p></div></details>'
+   + '<div class="acts"><button class="btn" id="sClose" type="button">Close</button><button class="btn primary" id="sSave" type="button">Save</button></div>';
+  openSheet('Settings', html, function(){ $('sNorth').value = s.north; $('sProj').value = s.proj; $('sClose').onclick = closeSheet;
+    $('sSave').onclick = function(){ s.north = $('sNorth').value; s.decl = parseFloat($('sDecl').value) || 0; s.proj = $('sProj').value; s.offE = parseFloat($('sOffE').value) || 0; s.offN = parseFloat($('sOffN').value) || 0;
+      s.win = GM.clamp(parseFloat($('sWin').value) || 1, 0.3, 5); s.hold = GM.clamp(parseFloat($('sHold').value) || 2, 0.5, 10); s.walkStep = GM.clamp(parseFloat($('sWalk').value) || 10, 2, 200); persist(); setNorthLabel(); closeSheet(); refreshAll(); toast('Settings saved'); }; }); }
+
+/* ---------- log ---------- */
+var logLimit = 150;
+function filtered(){ var st = $('fStation').value, ty = $('fType').value, q = $('fText').value.trim().toLowerCase();
+  return state.recs.filter(function(r){ return (!st || r.station === st) && (!ty || r.type === ty || r.ltype === ty) && (!q || (r.note + ' ' + r.rock + ' ' + r.station + ' ' + r.type).toLowerCase().indexOf(q) >= 0); }); }
+function fillSelect(el, values, allLabel, keep){ var cur = keep != null ? keep : el.value; el.innerHTML = '<option value="">' + allLabel + '</option>' + values.map(function(v){ return '<option' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join(''); }
+function uniq(arr){ return arr.filter(function(v,i){ return v && arr.indexOf(v) === i; }).sort(); }
+function renderLog(){ fillSelect($('fStation'), uniq(state.recs.map(function(r){ return r.station; })), 'All stations');
+  fillSelect($('fType'), uniq(state.recs.map(function(r){ return r.type; })), 'All');
+  var list = filtered().slice().reverse(); $('logCount').textContent = list.length + ' of ' + state.recs.length + ' readings';
+  $('loglist').innerHTML = list.slice(0, logLimit).map(recRow).join('') || '<li class="muted">No readings match.</li>'; $('btnMore').hidden = list.length <= logLimit;
+  $('exBanner').hidden = !state.recs.some(function(r){ return r.src === 'example'; }) && !state.features.some(function(f){ return f.src === 'example'; }); }
+function exportRecs(){ var real = state.recs.filter(function(r){ return r.src !== 'example'; }); return real.length ? real : state.recs; }
+function gridOf(r){ var g = GM.grid(r.lat, r.lon, state.set.proj); if (g) return {E:g.E + (+state.set.offE||0), N:g.N + (+state.set.offN||0), label:g.label}; if (r.E != null) return {E:r.E, N:r.N, label:'typed'}; return null; }
+function csvCell(v){ if (v == null) return ''; var s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }
+function toCSV(recs){ var head = ['ID','Station','Type','Kind','Dip','Dip direction','Strike (RHR)','Trend','Plunge','Line type','Rake','Line off plane (deg)','Easting','Northing','Grid','Latitude','Longitude','GPS height (m, ellipsoid)','GPS accuracy (m)','North','Declination','Method','Spread (deg)','Rock','Note','Date time','Photo'];
+  var rows = recs.map(function(r){ var g = gridOf(r); return [r.id, r.station, r.type, r.kind, r.dip, r.dipdir, r.dipdir != null ? +GM.strikeOf(r.dipdir).toFixed(1) : '', r.trend, r.plunge, r.ltype, r.rake, r.misfit,
+    g ? g.E.toFixed(2) : '', g ? g.N.toFixed(2) : '', g ? g.label : '', r.lat != null ? (+r.lat).toFixed(7) : '', r.lon != null ? (+r.lon).toFixed(7) : '', r.h != null ? (+r.h).toFixed(1) : '', r.acc != null ? (+r.acc).toFixed(1) : '',
+    r.north, r.decl, r.method, r.spread, r.rock, r.note, r.t, r.photo ? 'yes' : ''].map(csvCell).join(','); });
+  return '﻿' + head.join(',') + '\n' + rows.join('\n') + '\n'; }
+function toGeoJSON(recs){ return JSON.stringify({type:'FeatureCollection', features: recs.filter(function(r){ return r.lat != null; }).map(function(r){ var p = Object.assign({}, r); delete p.lat; delete p.lon;
+  if (r.dipdir != null) p.strike_rhr = +GM.strikeOf(r.dipdir).toFixed(1); return {type:'Feature', geometry:{type:'Point', coordinates:[+r.lon, +r.lat]}, properties:p}; })}, null, 1); }
+function toKML(recs){ var pts = recs.filter(function(r){ return r.lat != null; }).map(function(r){ return '<Placemark><name>' + esc(r.station + ' ' + (r.kind === 'line' ? fmtLine(r.trend, r.plunge) : fmtPlane(r))) + '</name><description>' + esc(describe(r) + (r.note ? ' — ' + r.note : '')) + '</description>' + (r.kind !== 'line' ? '<Style><IconStyle><heading>' + GM.strikeOf(r.dipdir).toFixed(0) + '</heading></IconStyle></Style>' : '') + '<Point><coordinates>' + (+r.lon).toFixed(7) + ',' + (+r.lat).toFixed(7) + '</coordinates></Point></Placemark>'; });
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Outcrop field book</name>' + pts.join('') + '</Document></kml>\n'; }
+function stamp(){ var d = new Date(); return d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2); }
+function saveFile(name, data, mime){
+  if (inViewer){ return dlCap.then(function(dl){ if (!dl){ copyFallback(data); return; }
+    return dl.save({filename:name, data:data}).then(function(){ toast('Saved ' + name); }).catch(function(e){ var c = e && e.code;
+      if (c === 'declined') return; if (c === 'rejected_extension' || c === 'extension_not_enabled') toast('This file type does not save from here. Use CSV or GeoJSON, or the phone app.'); else copyFallback(data); }); }); }
+  try{ var blob = new Blob([data], {type:mime}), url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); }, 5000); toast('Saved ' + name); }
+  catch(e){ copyFallback(data); } }
+function copyFallback(text){ if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ toast('Copied to the clipboard instead'); }, function(){ showText(text); }); } else showText(text); }
+function showText(text){ openSheet('Copy this', '<textarea id="cpTxt" style="min-height:240px;font-family:var(--f-mono);font-size:12px">' + esc(text) + '</textarea>', function(){ $('cpTxt').select(); }); }
+function backup(){ var recs = state.recs, ids = recs.filter(function(r){ return r.photo; }).map(function(r){ return r.id; }).concat(state.overlays.map(function(o){ return 'ov:' + o.id; })), photos = {};
+  return Promise.all(ids.map(function(id){ return PhotoDB.get(id).then(function(b){ if (!b) return; return new Promise(function(res){ var fr = new FileReader(); fr.onload = function(){ photos[id] = fr.result; res(); }; fr.onerror = function(){ res(); }; fr.readAsDataURL(b); }); }); }))
+    .then(function(){ return JSON.stringify({app:'Outcrop Field Book', version:2, saved:new Date().toISOString(), settings:state.set, records:recs, features:state.features, units:state.units, overlays:state.overlays, photos:photos}); }); }
+
+/* import */
+function parseCSV(text){ var rows = [], row = [], f = '', q = false; text = text.replace(/^﻿/, '');
+  for (var i=0;i<text.length;i++){ var c = text[i];
+    if (q){ if (c === '"'){ if (text[i+1] === '"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true; else if (c === ',' || c === ';' || c === '\t'){ row.push(f); f = ''; } else if (c === '\n' || c === '\r'){ if (c === '\r' && text[i+1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; } else f += c; }
+  if (f !== '' || row.length){ row.push(f); rows.push(row); } return rows.filter(function(r){ return r.some(function(x){ return x.trim() !== ''; }); }); }
+function findCol(head, tests){ for (var t=0;t<tests.length;t++) for (var i=0;i<head.length;i++) if (tests[t].test(head[i])) return i; return -1; }
+function importCSV(text){ var rows = parseCSV(text); if (rows.length < 2) return {n:0, why:'No rows found.'};
+  var h = rows[0].map(function(x){ return x.trim().toLowerCase(); });
+  var c = {dd: findCol(h, [/^dip ?dir(ection)?\b/, /dip.?azi/, /^dipdir/, /^dd$/, /^azimuth$/]), dip: findCol(h, [/^dip$/, /^dip ?(angle|\(deg\)|deg)/, /^dip\b(?!.*dir)/]),
+    strike: findCol(h, [/^strike/]), trend: findCol(h, [/^trend/, /plunge ?dir/]), plunge: findCol(h, [/^plunge$/, /^plunge\b(?!.*dir)/]),
+    lat: findCol(h, [/^lat/]), lon: findCol(h, [/^lon/, /^long/]), E: findCol(h, [/^east/, /^x$/]), N: findCol(h, [/^north(ing)?$/, /^y$/]),
+    type: findCol(h, [/^(plane |structure |feature )?type$/, /^type/, /^plane/, /structure/]), st: findCol(h, [/^station/, /^site/, /^stn/, /^name$/, /^location$/]),
+    note: findCol(h, [/note/, /comment/, /desc/]), rock: findCol(h, [/^rock/, /lith/]), t: findCol(h, [/date ?time/, /^time/, /^date/]), elev: findCol(h, [/elev/, /^alt/, /height/, /^z$/]), id: findCol(h, [/^id$/])};
+  var n = 0, skipped = 0, src = 'import';
+  rows.slice(1).forEach(function(r){ function v(k){ return c[k] >= 0 ? (r[c[k]] || '').trim() : ''; } function num(k){ var x = parseFloat(v(k)); return isFinite(x) ? x : null; }
+    var type = v('type') || '', rec = {id: v('id') && !state.recs.some(function(x){ return x.id === v('id'); }) ? v('id') : uid(), t: v('t') || new Date().toISOString(), station: v('st') || 'Imported', note: v('note'), rock: v('rock'), method:'typed', src:src, decl:0, north:'true'};
+    var lat = num('lat'), lon = num('lon'); if (lat != null && lon != null && Math.abs(lat) <= 90 && Math.abs(lon) <= 180){ rec.lat = lat; rec.lon = lon; rec.h = num('elev'); } else if (num('E') != null && num('N') != null){ rec.E = num('E'); rec.N = num('N'); }
+    var dip = num('dip'), dd = num('dd'), st = num('strike'), tr = num('trend'), pl = num('plunge');
+    if (dd == null && st != null) dd = GM.n360(st + 90);
+    var lineish = isLineType(type);
+    if (lineish && tr == null && dd != null && dip != null){ tr = dd; pl = dip; dip = null; dd = null; }
+    if (dip != null && dd != null && dip >= 0 && dip <= 90){ rec.dip = dip; rec.dipdir = GM.n360(dd); rec.kind = 'plane'; rec.type = type || 'Plane'; }
+    if (tr != null && pl != null && pl >= 0 && pl <= 90){ rec.trend = GM.n360(tr); rec.plunge = pl; if (rec.kind === 'plane'){ rec.kind = 'pl'; var rk = GM.rake(rec.dip, rec.dipdir, rec.trend, rec.plunge); rec.rake = Math.round(rk.rake); rec.misfit = Math.round(rk.misfit); rec.ltype = 'Lineation'; } else { rec.kind = 'line'; rec.type = type || 'Lineation'; } }
+    if (!rec.kind){ skipped++; return; } state.recs.push(rec); n++; });
+  return {n:n, skipped:skipped, cols:c}; }
+function importJSON(text){ var d = JSON.parse(text), recs = d.records || [], have = {}, n = 0; state.recs.forEach(function(r){ have[r.id] = 1; });
+  recs.forEach(function(r){ if (!r || have[r.id] || (r.dip == null && r.trend == null)) return; state.recs.push(r); n++; });
+  var hf = {}; state.features.forEach(function(f){ hf[f.id] = 1; }); (d.features || []).forEach(function(f){ if (f && !hf[f.id] && f.coords){ state.features.push(f); n++; } });
+  (d.units || []).forEach(function(u){ if (u && !unitOf(u.name)) state.units.push(u); });
+  var ho = {}; state.overlays.forEach(function(o){ ho[o.id] = 1; }); (d.overlays || []).forEach(function(o){ if (o && !ho[o.id]) state.overlays.push(o); });
+  var ph = d.photos || {}; Object.keys(ph).forEach(function(id){ try{ fetch(ph[id]).then(function(x){ return x.blob(); }).then(function(b){ PhotoDB.put(id, b); }); }catch(e){} });
+  return n; }
+
+/* ---------- analyse ---------- */
+var netPts = [];
+function anaData(){ var st = $('aStation').value, types = state.ui.aTypes, sel = state.ui.aSel ? state.ui.aSel.ids : null;
+  return state.recs.filter(function(r){ return (!sel || sel.indexOf(r.id) >= 0) && (!st || r.station === st) && (!types || types.indexOf(r.type) >= 0 || (r.kind === 'pl' && types.indexOf(r.ltype) >= 0)); }); }
+function renderAnaControls(){ fillSelect($('aStation'), uniq(state.recs.map(function(r){ return r.station; })), 'All stations', state.ui.aStation);
+  var all = uniq(state.recs.map(function(r){ return r.type; }).concat(state.recs.filter(function(r){ return r.kind === 'pl'; }).map(function(r){ return r.ltype; })));
+  if (state.ui.aTypes){ state.ui.aTypes = state.ui.aTypes.filter(function(t){ return all.indexOf(t) >= 0; }); if (!state.ui.aTypes.length) state.ui.aTypes = null; }
+  if (!state.ui.aTypes && !state.ui.aInit && all.indexOf('Bedding') >= 0){ state.ui.aTypes = ['Bedding'].concat(all.filter(isLineType)); state.ui.aInit = true; }
+  $('aTypes').innerHTML = (state.ui.aSel ? '<button type="button" class="chip" data-at="#sel" aria-pressed="true" style="border-color:var(--accent);background:var(--accent);color:var(--accent-ink)">Inside ' + esc(state.ui.aSel.name) + ' (' + state.ui.aSel.ids.length + ') ✕</button>' : '') + '<button type="button" class="chip" data-at="*" aria-pressed="' + !state.ui.aTypes + '">Everything</button>' + all.map(function(t){ return '<button type="button" class="chip' + (isLineType(t) ? ' ln' : '') + '" data-at="' + esc(t) + '" aria-pressed="' + (!!state.ui.aTypes && state.ui.aTypes.indexOf(t) >= 0) + '">' + esc(t) + '</button>'; }).join('');
+  $('aShow').value = state.ui.show; document.querySelectorAll('#projSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.p === state.ui.proj); }); }
+function analysis(){ var data = anaData(), poles = [], planes = [], lines = [];
+  data.forEach(function(r){ if (r.dip != null && r.kind !== 'line'){ var isL = state.ui.aTypes && state.ui.aTypes.indexOf(r.type) < 0; if (!isL){ poles.push(GM.poleVec(r.dip, r.dipdir)); planes.push(r); } }
+    if (r.trend != null && (r.kind === 'line' || !state.ui.aTypes || state.ui.aTypes.indexOf(r.ltype) >= 0)) lines.push(r); });
+  var out = {data:data, poles:poles, planes:planes, lines:lines, lvec:lines.map(function(r){ return GM.lineVec(r.trend, r.plunge); })};
+  if (poles.length >= 2){ out.pf = GM.fisher(poles); }
+  if (poles.length >= 3){ out.pe = GM.eigen(poles); out.sets = GM.findSets(poles, 4);
+    var e3 = out.pe.e[2].vec; out.pi = GM.lineOf(e3); out.shape = out.pe.K > 1 ? 'cluster' : 'girdle'; }
+  if (out.sets && out.sets.length >= 2){ var a = GM.planeOf(GM.neg(out.sets[0].mean)), b = GM.planeOf(GM.neg(out.sets[1].mean));
+    var na = GM.normalUp(a.dip, a.dipdir), nb = GM.normalUp(b.dip, b.dipdir), ang = Math.acos(GM.clamp(GM.dot(na, nb), -1, 1))*GM.R2D;
+    out.fold = {limbA:a, limbB:b, beta:GM.lineOf(GM.cross(na, nb)), interlimb:180 - ang}; }
+  if (lines.length >= 2) out.lf = GM.fisher(out.lvec);
+  return out; }
+function drawNet(A){ var cv = $('net'), dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 320; if (cv.width !== Math.round(W*dpr)){ cv.width = Math.round(W*dpr); cv.height = Math.round(W*dpr); }
+  var ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,W);
+  var pad = 24, R = W/2 - pad, cx = W/2, cy = W/2, kind = state.ui.proj, show = state.ui.show, ink = cssv('--ink'), mut = cssv('--muted'), ln = cssv('--line');
+  function P(v){ var p = GM.project(v, kind); return [cx + p[0]*R, cy - p[1]*R]; }
+  ctx.fillStyle = cssv('--bg'); ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.fill();
+  if ((show === 'pd' || show === 'd') && A.poles.length >= 3){ var G = 90, off = document.createElement('canvas'); off.width = G; off.height = G; var oc = off.getContext('2d'), img = oc.createImageData(G,G), rgb = cssv('--dens').split(/\s+/).map(Number), vs = A.poles;
+    var levels = [1,2,4,8,16], alphas = [0, .16, .32, .5, .68, .85], k = GM.KAPPA, norm = vs.length*GM.UNI;
+    for (var yy=0; yy<G; yy++) for (var xx=0; xx<G; xx++){ var x = (xx + .5)/G*2 - 1, y = 1 - (yy + .5)/G*2, v = GM.unproject(x, y, kind); if (!v) continue;
+      var s = 0; for (var i=0;i<vs.length;i++) s += Math.exp(k*(Math.abs(v[0]*vs[i][0]+v[1]*vs[i][1]+v[2]*vs[i][2]) - 1)); s /= norm;
+      var lv = 0; while (lv < levels.length && s >= levels[lv]) lv++; var o = (yy*G + xx)*4; img.data[o]=rgb[0]; img.data[o+1]=rgb[1]; img.data[o+2]=rgb[2]; img.data[o+3]=Math.round(alphas[lv]*255); }
+    oc.putImageData(img,0,0); ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.clip(); ctx.imageSmoothingEnabled = true; ctx.drawImage(off, cx-R, cy-R, 2*R, 2*R); ctx.restore(); }
+  ctx.strokeStyle = ln; ctx.lineWidth = 0.8; [30,60].forEach(function(d){ ctx.beginPath(); for (var a=0;a<=360;a+=4){ var p = P(GM.lineVec(a, d)); if (a === 0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); } ctx.stroke(); });
+  ctx.beginPath(); ctx.moveTo(cx-R,cy); ctx.lineTo(cx+R,cy); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R); ctx.stroke();
+  ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.stroke();
+  for (var a2=0;a2<360;a2+=10){ var s2 = Math.sin(a2*GM.D), c2 = Math.cos(a2*GM.D), t = a2 % 90 === 0 ? 9 : 4; ctx.beginPath(); ctx.moveTo(cx + s2*R, cy - c2*R); ctx.lineTo(cx + s2*(R+t), cy - c2*(R+t)); ctx.stroke(); }
+  ctx.fillStyle = cssv('--accent'); ctx.font = '700 15px ' + cssv('--f-disp'); ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('N', cx, cy - R - 9);
+  netPts = [];
+  var pc = cssv('--plane'), lc = cssv('--linec');
+  if (show === 'gc'){ ctx.strokeStyle = pc; ctx.globalAlpha = A.planes.length > 60 ? .35 : .7; ctx.lineWidth = 1;
+    A.planes.forEach(function(r){ ctx.beginPath(); GM.greatCircle(r.dip, r.dipdir, 48).forEach(function(v,i){ var p = P(v); if (i) ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); }); ctx.stroke(); }); ctx.globalAlpha = 1; }
+  if (show !== 'd'){ A.planes.forEach(function(r){ var p = P(GM.poleVec(r.dip, r.dipdir)); netPts.push({x:p[0], y:p[1], r:r, what:'pole'}); if (show === 'gc') return;
+    ctx.fillStyle = pc; ctx.strokeStyle = cssv('--surface'); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p[0], p[1], 3.6, 0, 7); ctx.fill(); ctx.stroke(); }); }
+  A.lines.forEach(function(r){ var p = P(GM.lineVec(r.trend, r.plunge)); netPts.push({x:p[0], y:p[1], r:r, what:'line'}); ctx.fillStyle = lc; ctx.strokeStyle = cssv('--surface'); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(p[0], p[1]-5); ctx.lineTo(p[0]+4.5, p[1]+3.5); ctx.lineTo(p[0]-4.5, p[1]+3.5); ctx.closePath(); ctx.fill(); ctx.stroke(); });
+  var setCols = ['--s1','--s2','--s3','--s4'].map(cssv);
+  if (A.pe && A.shape === 'girdle' && A.poles.length >= 5){ var pi = A.pi, gp = GM.planeOf(GM.lineVec(pi.trend, pi.plunge));
+    ctx.setLineDash([6,5]); ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.beginPath(); GM.greatCircle(90 - pi.plunge, GM.n360(pi.trend + 180), 64).forEach(function(v,i){ var p = P(v); if (i) ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); }); ctx.stroke(); ctx.setLineDash([]);
+    var q = P(GM.lineVec(pi.trend, pi.plunge)), nearBeta = A.fold && GM.axAngle(GM.lineVec(pi.trend, pi.plunge), GM.lineVec(A.fold.beta.trend, A.fold.beta.plunge)) < 8; if (!nearBeta) label(ctx, q, 'π ' + fmtLine(pi.trend, pi.plunge), ink); void gp; }
+  (A.sets || []).forEach(function(s, i){ var col = setCols[i % 4], pl = GM.planeOf(GM.neg(s.mean)), p = P(s.mean);
+    ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.beginPath(); GM.greatCircle(pl.dip, pl.dipdir, 64).forEach(function(v,j){ var q = P(v); if (j) ctx.lineTo(q[0],q[1]); else ctx.moveTo(q[0],q[1]); }); ctx.stroke();
+    ctx.fillStyle = col; ctx.strokeStyle = cssv('--surface'); ctx.lineWidth = 2; ctx.fillRect(p[0]-5, p[1]-5, 10, 10); ctx.strokeRect(p[0]-5, p[1]-5, 10, 10); label(ctx, [p[0], p[1]+2], 'S' + (i+1), col); });
+  if (A.fold){ var b = P(GM.lineVec(A.fold.beta.trend, A.fold.beta.plunge)); ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(b[0], b[1], 5, 0, 7); ctx.fill(); label(ctx, [b[0], b[1]-4], 'β ' + fmtLine(A.fold.beta.trend, A.fold.beta.plunge), ink); }
+  if (ptr){ var pp = P(ptr); ctx.strokeStyle = cssv('--accent'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pp[0], pp[1], 8, 0, 7); ctx.stroke(); }
+  var lg = []; if (show !== 'd' && A.planes.length) lg.push('<span><i style="background:var(--plane)"></i>Poles to planes (' + A.planes.length + ')</span>');
+  if (A.lines.length) lg.push('<span><i style="background:var(--linec);border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)"></i>Lines (' + A.lines.length + ')</span>');
+  if ((show === 'pd' || show === 'd') && A.poles.length >= 3) lg.push('<span><i style="background:rgb(' + cssv('--dens').split(/\s+/).join(',') + ')"></i>Density 1, 2, 4, 8, 16 × even spread</span>');
+  (A.sets || []).forEach(function(s,i){ lg.push('<span><i style="background:var(' + ['--s1','--s2','--s3','--s4'][i%4] + ');border-radius:2px"></i>S' + (i+1) + ' mean plane</span>'); });
+  if (A.pe && A.shape === 'girdle' && A.poles.length >= 5) lg.push('<span>- - π girdle (best-fit great circle)</span>');
+  $('netLegend').innerHTML = lg.join(''); }
+function label(ctx, p, text, col){ ctx.font = '700 13px ' + cssv('--f-mono'); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; var w = ctx.measureText(text).width;
+  ctx.fillStyle = cssv('--surface'); ctx.globalAlpha = .85; ctx.fillRect(p[0]+7, p[1]-9, w+6, 17); ctx.globalAlpha = 1; ctx.fillStyle = col; ctx.fillText(text, p[0]+10, p[1]); }
+function drawRose(A){ var cv = $('rose'), dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 240; if (cv.width !== Math.round(W*dpr)){ cv.width = Math.round(W*dpr); cv.height = Math.round(W*dpr); }
+  var ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,W); var cx = W/2, cy = W/2, R = W/2 - 22, bins = new Array(36).fill(0), usePlanes = A.planes.length >= A.lines.length;
+  $('roseTitle').textContent = usePlanes ? 'Rose of strikes' : 'Rose of trends';
+  if (usePlanes) A.planes.forEach(function(r){ var s = GM.strikeOf(r.dipdir); bins[Math.floor(s/10)%36]++; bins[Math.floor(GM.n360(s+180)/10)%36]++; });
+  else A.lines.forEach(function(r){ bins[Math.floor(r.trend/10)%36]++; });
+  var mx = Math.max.apply(null, bins) || 1, ink = cssv('--ink');
+  ctx.strokeStyle = cssv('--line'); ctx.lineWidth = 1; [0.5,1].forEach(function(f){ ctx.beginPath(); ctx.arc(cx,cy,R*f,0,7); ctx.stroke(); });
+  ctx.fillStyle = usePlanes ? cssv('--plane') : cssv('--linec'); ctx.globalAlpha = .85;
+  bins.forEach(function(n,i){ if (!n) return; var r = R*Math.sqrt(n/mx), a0 = (i*10 - 90)*GM.D, a1 = ((i+1)*10 - 90)*GM.D; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,a0,a1); ctx.closePath(); ctx.fill(); });
+  ctx.globalAlpha = 1; ctx.fillStyle = cssv('--accent'); ctx.font = '700 14px ' + cssv('--f-disp'); ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('N', cx, cy - R - 4);
+  ctx.fillStyle = cssv('--muted'); ctx.font = '12px ' + cssv('--f-mono'); ctx.textBaseline = 'top'; ctx.textAlign = 'left'; ctx.fillText('outer ring ' + mx + (usePlanes ? ' (both ends)' : ''), 4, W - 16); void ink; }
+function renderStats(A){ var rows = [], note = [];
+  function row(k, v){ rows.push('<tr><td>' + k + '</td><td>' + v + '</td></tr>'); }
+  row('Readings on the net', A.data.length); row('Planes · lines', A.planes.length + ' · ' + A.lines.length);
+  if (A.pf && (!A.pe || A.shape === 'cluster')){ var mp = GM.planeOf(GM.neg(A.pf.mean)); row('Mean plane (Fisher)', fmtPlane(mp)); row('κ · α95', (isFinite(A.pf.k) ? A.pf.k.toFixed(1) : '∞') + ' · ' + (isFinite(A.pf.a95) ? A.pf.a95.toFixed(1) + '°' : '—')); }
+  if (A.pe){ row('Eigenvalues S1 S2 S3', A.pe.S.map(function(x){ return x.toFixed(2); }).join(' ')); row('Woodcock K · C', A.pe.K.toFixed(2) + ' · ' + A.pe.C.toFixed(2) + ' (' + A.shape + ')'); if (A.shape === 'girdle') row('π-axis (girdle pole)', fmtLine(A.pi.trend, A.pi.plunge)); }
+  (A.sets || []).forEach(function(s,i){ var p = GM.planeOf(GM.neg(s.mean)); row('Set S' + (i+1), fmtPlane(p) + ' · ' + s.n + ' (' + Math.round(s.share*100) + '%)'); });
+  if (A.fold){ row('Fold axis β (S1 ∩ S2)', fmtLine(A.fold.beta.trend, A.fold.beta.plunge) + ' ' + GM.plungeWord(A.fold.beta.plunge)); row('Interlimb angle', Math.round(A.fold.interlimb) + '° · ' + GM.fleuty(A.fold.interlimb));
+    note.push('Interlimb angle assumes both limbs are the right way up. If one limb is overturned, it is ' + Math.round(180 - A.fold.interlimb) + '°.'); }
+  if (A.lf){ var ml = GM.lineOf(A.lf.mean); row('Mean line', fmtLine(ml.trend, ml.plunge) + ' · α95 ' + (isFinite(A.lf.a95) ? A.lf.a95.toFixed(1) + '°' : '—')); if (A.fold) row('Mean line vs β', Math.round(GM.axAngle(A.lf.mean, GM.lineVec(A.fold.beta.trend, A.fold.beta.plunge))) + '°'); }
+  if (A.planes.length && A.planes.length < 6) note.push('Sets need at least 6 planes.');
+  if (A.data.some(function(r){ return r.src === 'example'; })) note.push('Includes example data.');
+  $('stats').innerHTML = rows.join(''); $('statsNote').textContent = note.join(' '); }
+var ptr = null, lastA = null;
+function renderAnalyse(){ renderAnaControls(); var A = analysis(); lastA = A; drawNet(A); drawRose(A); renderStats(A); runTools(); }
+function netPointer(e){ var cv = $('net'), b = cv.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top, W = b.width, R = W/2 - 24;
+  var best = null, bd = 14; netPts.forEach(function(p){ var d = Math.hypot(p.x - x, p.y - y); if (d < bd){ bd = d; best = p; } });
+  if (best){ ptr = null; $('netPtr').innerHTML = esc(describe(best.r)) + ' · ' + esc(best.r.station) + (best.r.src === 'example' ? ' (example)' : ''); drawNet(lastA); return; }
+  var v = GM.unproject((x - W/2)/R, (W/2 - y)/R, state.ui.proj); if (!v){ ptr = null; drawNet(lastA); return; } ptr = v;
+  var l = GM.lineOf(v), p = GM.planeOf(GM.neg(v)); $('netPtr').textContent = 'Line ' + fmtLine(l.trend, l.plunge) + ' · plane with this pole ' + fmtPlane(p); drawNet(lastA); }
+function runTools(){ var a = GM.parseAttitude($('tA').value), b = GM.parseAttitude($('tB').value);
+  if (a && b){ var na = GM.normalUp(a.dip, a.dipdir), nb = GM.normalUp(b.dip, b.dipdir), c = GM.cross(na, nb);
+    if (GM.len(c) < 1e-6) $('tAB').textContent = 'The planes are parallel.'; else { var L = GM.lineOf(c), ang = GM.axAngle(na, nb), rka = GM.rake(a.dip, a.dipdir, L.trend, L.plunge).rake;
+      $('tAB').textContent = 'Intersection   ' + fmtLine(L.trend, L.plunge) + '  (' + GM.plungeWord(L.plunge) + ')\nAngle between  ' + ang.toFixed(1) + '° / ' + (180 - ang).toFixed(1) + '°\nRake on A      ' + rka.toFixed(0) + '°'; } }
+  else $('tAB').textContent = 'Type each plane as 40/090 or N45E/30SE.';
+  var dip = +$('adDip').value, dd = +$('adDd').value, az = +$('adAz').value;
+  if (isFinite(dip) && isFinite(dd) && isFinite(az)){ var app = GM.apparentDip(dip, dd, az), toward = Math.cos((az - dd)*GM.D) >= 0 ? pad3(az) : pad3(az + 180);
+    $('adOut').textContent = 'Apparent dip ' + app.toFixed(1) + '° toward ' + toward + '\n(vertical exaggeration 1:1)'; }
+  var w = +$('ttW').value, td = +$('ttDip').value, sl = +$('ttSl').value, same = $('ttSame').checked;
+  if (w > 0 && isFinite(td) && isFinite(sl)){ var t = w*Math.abs(Math.sin((same ? td - sl : td + sl)*GM.D)), hz = w*Math.cos(sl*GM.D);
+    $('ttOut').textContent = 'True thickness ' + t.toFixed(2) + ' m\nHorizontal width ' + hz.toFixed(2) + ' m · vertical depth to base ' + (hz*Math.tan(td*GM.D)).toFixed(2) + ' m'; }
+  var A = lastA; if (A){ var face = {dip:+$('kmDip').value, dipdir:+$('kmDd').value}, phi = +$('kmPhi').value;
+    if (!A.planes.length) $('kmOut').textContent = 'No planes on the net.';
+    else { var k = GM.kinematics(A.planes.map(function(r){ return {dip:r.dip, dipdir:r.dipdir}; }), face, phi, 20);
+      function pc(x, n){ return n ? (100*x/n).toFixed(0) + '%' : '—'; } function lvl(x, n){ var f = n ? x/n : 0; return f <= .05 ? 'low' : f <= .15 ? 'moderate' : 'high'; }
+      $('kmOut').textContent = 'Planar sliding     ' + pc(k.planar, k.N).padStart(4) + '  ' + lvl(k.planar, k.N) + '\nFlexural toppling  ' + pc(k.topple, k.N).padStart(4) + '  ' + lvl(k.topple, k.N) + '\nWedge (pairs)      ' + pc(k.wedge, k.pairs).padStart(4) + '  ' + lvl(k.wedge, k.pairs) + '\n' + k.N + ' planes, ' + k.pairs + ' pairs. A screening check, not a design.'; } } }
+
+/* ---------- map: base maps, readings, contacts, units ---------- */
+var BASES = {
+  sat:{name:'Satellite', url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', max:19, attr:'Imagery © Esri, Maxar, Earthstar Geographics'},
+  hyb:{name:'Satellite + labels', url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', labels:'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', max:19, attr:'Imagery and labels © Esri, Maxar, Earthstar Geographics'},
+  osm:{name:'OpenStreetMap', url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', max:19, attr:'© OpenStreetMap contributors'},
+  topo:{name:'Topographic', url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', max:17, attr:'© OpenStreetMap contributors, SRTM · style © OpenTopoMap (CC-BY-SA)'},
+  esritopo:{name:'Esri topographic', url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', max:19, attr:'© Esri and contributors'},
+  none:{name:'No base map', url:null}
+};
+var LINE_KINDS = ['Contact','Fault','Thrust fault','Normal fault','Anticline trace','Syncline trace','Dyke / vein','Other line'];
+var CERT = [['observed','Observed'],['approx','Approximate'],['inferred','Inferred'],['concealed','Concealed']];
+var UNIT_COLS = ['#e8c547','#8fbf5a','#d98c5f','#7fb3d5','#c39bd3','#b5b5a8','#f1948a','#76d7c4','#c8873a','#7d8fa0'];
+var MAP = {m:null, base:null, label:null, rd:null, ft:null, deco:null, dr:null, gpsL:null, ov:{}, editL:null};
+var DR = null, EDIT = null;
+function lineStyle(f){ var k = f.kind || '', sub = f.sub || 'observed', dash = {observed:null, approx:'14 8', inferred:'5 7', concealed:'1 7'}[sub];
+  var col = /fault/i.test(k) ? '#d32f2f' : /anticline|syncline/i.test(k) ? '#7b3fc4' : /dyke|vein/i.test(k) ? '#9a5513' : k === 'Contact' ? '#111111' : '#37474f';
+  var w = /fault/i.test(k) ? 3.6 : /anticline|syncline/i.test(k) ? 2.8 : 2.4;
+  return {color:col, weight:w, dashArray:dash, lineCap: sub === 'concealed' ? 'round' : 'butt', opacity:1}; }
+function unitOf(name){ return state.units.find(function(u){ return u.name === name; }); }
+function darken(hex){ var n = parseInt((hex || '#888888').slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; return 'rgb(' + Math.round(r*.6) + ',' + Math.round(g*.6) + ',' + Math.round(b*.6) + ')'; }
+function haversine(a, b){ var R = 6371008.8, la1 = a[0]*GM.D, la2 = b[0]*GM.D, dla = la2 - la1, dlo = (b[1]-a[1])*GM.D, h = Math.sin(dla/2)*Math.sin(dla/2) + Math.cos(la1)*Math.cos(la2)*Math.sin(dlo/2)*Math.sin(dlo/2); return 2*R*Math.asin(Math.min(1, Math.sqrt(h))); }
+function lengthOf(c){ var s = 0; for (var i=1;i<c.length;i++) s += haversine(c[i-1], c[i]); return s; }
+function areaOf(c){ if (c.length < 3) return 0; var la0 = c[0][0]*GM.D, k = 6371008.8, s = 0, p = c.map(function(q){ return [q[1]*GM.D*k*Math.cos(la0), q[0]*GM.D*k]; });
+  for (var i=0;i<p.length;i++){ var j = (i+1) % p.length; s += p[i][0]*p[j][1] - p[j][0]*p[i][1]; } return Math.abs(s)/2; }
+function inPoly(lat, lon, c){ var inside = false; for (var i=0, j=c.length-1; i<c.length; j=i++){ var yi = c[i][0], xi = c[i][1], yj = c[j][0], xj = c[j][1];
+  if ((yi > lat) !== (yj > lat) && lon < (xj - xi)*(lat - yi)/(yj - yi) + xi) inside = !inside; } return inside; }
+function fmtDist(m){ return m >= 1000 ? (m/1000).toFixed(2) + ' km' : Math.round(m) + ' m'; }
+function gmapsUrl(lat, lon){ return 'https://www.google.com/maps/search/?api=1&query=' + (+lat).toFixed(6) + ',' + (+lon).toFixed(6); }
+
+function initMap(){ if (MAP.m){ MAP.m.invalidateSize(); renderMapData(); return; }
+  if (!window.L){ var n = $('mapNote'); n.hidden = false; n.innerHTML = '<b>The map library did not load.</b> Open the app once with signal so it is kept for offline use.'; return; }
+  var m = L.map('map', {zoomControl:true, worldCopyJump:true}); MAP.m = m;
+  MAP.ovL = L.layerGroup().addTo(m); MAP.ft = L.layerGroup().addTo(m); MAP.deco = L.layerGroup().addTo(m); MAP.rd = L.layerGroup().addTo(m); MAP.gpsL = L.layerGroup().addTo(m); MAP.dr = L.layerGroup().addTo(m); MAP.editL = L.layerGroup().addTo(m);
+  setBase(state.ui.base || 'sat');
+  var v = state.ui.mapView; if (v && isFinite(v[0])) m.setView([v[0], v[1]], v[2]); else fitData();
+  m.on('moveend', function(){ var c = m.getCenter(); state.ui.mapView = [c.lat, c.lng, m.getZoom()]; $('gmLink').href = gmapsUrl(c.lat, c.lng); persist(); });
+  m.on('zoomend', function(){ drawDeco(); renderReadings(); }); m.on('moveend', drawDeco);
+  m.on('click', function(e){ if (DR) addDrawPoint(e.latlng); });
+  var c0 = m.getCenter(); $('gmLink').href = gmapsUrl(c0.lat, c0.lng);
+  renderOverlays(); renderMapData(); if (S.gps) onGpsFix(); }
+function setBase(key){ if (!BASES[key]) key = 'sat'; state.ui.base = key; $('baseSel').value = key; if (!MAP.m) return; var b = BASES[key];
+  if (MAP.base){ MAP.m.removeLayer(MAP.base); MAP.base = null; } if (MAP.label){ MAP.m.removeLayer(MAP.label); MAP.label = null; }
+  if (b.url){ MAP.base = L.tileLayer(b.url, {maxZoom:21, maxNativeZoom:b.max, attribution:b.attr, subdomains:'abc'}).addTo(MAP.m); MAP.base.bringToBack(); }
+  if (b.labels){ MAP.label = L.tileLayer(b.labels, {maxZoom:21, maxNativeZoom:b.max, pane:'overlayPane'}).addTo(MAP.m); }
+  $('map').classList.toggle('dark-base', key === 'sat' || key === 'hyb'); persist(); }
+function fitData(){ if (!MAP.m) return; var pts = [];
+  state.recs.forEach(function(r){ if (r.lat != null && r.lon != null) pts.push([r.lat, r.lon]); });
+  state.features.forEach(function(f){ f.coords.forEach(function(c){ pts.push(c); }); });
+  if (pts.length) MAP.m.fitBounds(L.latLngBounds(pts).pad(0.15), {maxZoom:17}); else if (S.gps) MAP.m.setView([S.gps.lat, S.gps.lon], 16); else MAP.m.setView([20, 10], 2); }
+
+var SYMCOL = {Bedding:'#111111', Foliation:'#1565c0', Cleavage:'#2e7d32', Joint:'#546e7a', Fault:'#d32f2f', Vein:'#9a5513', 'Shear zone':'#ad1457', Contact:'#111111', 'Axial plane':'#7b3fc4', Dyke:'#9a5513'};
+function mapSym(r, labels){ var halo = 'stroke="#fff" stroke-width="6" stroke-linecap="round"', txt = '';
+  function T(x, y, s){ return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="middle" dominant-baseline="central" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="13" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">' + s + '</text>'; }
+  if (r.kind === 'line'){ var col = '#c2185b', tr = r.trend;
+    var g = '<g transform="rotate(' + tr.toFixed(1) + ')"><line x1="0" y1="10" x2="0" y2="-12" ' + halo + '/><line x1="0" y1="10" x2="0" y2="-12" stroke="' + col + '" stroke-width="2.6"/><path d="M0,-17 L5,-9 L-5,-9 Z" fill="' + col + '" stroke="#fff" stroke-width="1.2"/></g>';
+    if (labels) txt = T(-Math.sin(tr*GM.D)*17, Math.cos(tr*GM.D)*17, Math.round(r.plunge));
+    return '<svg width="48" height="48" viewBox="-24 -24 48 48" aria-hidden="true">' + g + txt + '</svg>'; }
+  var colp = SYMCOL[r.type] || '#111111', st = GM.strikeOf(r.dipdir), body;
+  if (r.dip < 2) body = '<circle r="8" fill="none" ' + halo + '/><circle r="8" fill="none" stroke="' + colp + '" stroke-width="2.4"/><line x1="-8" y1="0" x2="8" y2="0" stroke="' + colp + '" stroke-width="2.4"/><line x1="0" y1="-8" x2="0" y2="8" stroke="' + colp + '" stroke-width="2.4"/>';
+  else { var tick = r.dip > 88 ? '<line x1="-7" y1="0" x2="7" y2="0"' : '<line x1="0" y1="0" x2="8" y2="0"';
+    body = '<g transform="rotate(' + st.toFixed(1) + ')"><line x1="0" y1="-13" x2="0" y2="13" ' + halo + '/>' + tick + ' ' + halo + '/><line x1="0" y1="-13" x2="0" y2="13" stroke="' + colp + '" stroke-width="2.6"/>' + tick + ' stroke="' + colp + '" stroke-width="2.6"/></g>'; }
+  if (r.kind === 'pl'){ var t2 = r.trend; body += '<g transform="rotate(' + t2.toFixed(1) + ')"><line x1="0" y1="0" x2="0" y2="-11" stroke="#c2185b" stroke-width="2"/><path d="M0,-15 L3.5,-9 L-3.5,-9 Z" fill="#c2185b"/></g>'; }
+  if (labels && r.dip >= 2 && r.dip <= 88) txt = T(Math.sin(r.dipdir*GM.D)*16, -Math.cos(r.dipdir*GM.D)*16, Math.round(r.dip));
+  return '<svg width="48" height="48" viewBox="-24 -24 48 48" aria-hidden="true">' + body + txt + '</svg>'; }
+function renderReadings(){ if (!MAP.m) return; MAP.rd.clearLayers(); var noPos = 0, placed = [], m = MAP.m;
+  if (!$('mapShowRd').checked) return;
+  state.recs.slice().reverse().forEach(function(r){ if (r.lat == null || r.lon == null){ noPos++; return; }
+    var q = m.latLngToLayerPoint([r.lat, r.lon]), crowd = placed.some(function(o){ return Math.abs(o.x - q.x) < 30 && Math.abs(o.y - q.y) < 30; }); placed.push(q);
+    var mk = L.marker([r.lat, r.lon], {icon:L.divIcon({className:'symk', html:mapSym(r, !crowd), iconSize:[48,48], iconAnchor:[24,24]}), keyboard:false, riseOnHover:true, zIndexOffset: crowd ? 0 : 500});
+    mk.on('click', function(e){ if (DR){ addDrawPoint(e.latlng); return; } recordSheet(r); }); mk.addTo(MAP.rd); });
+  $('mapNoPos').textContent = noPos ? noPos + ' reading' + (noPos === 1 ? ' has' : 's have') + ' no latitude/longitude and are not on the map.' : ''; }
+function renderMapData(){ if (!MAP.m) return; MAP.ft.clearLayers();
+  state.features.slice().sort(function(a, b){ return (a.geom === 'poly' ? 0 : 1) - (b.geom === 'poly' ? 0 : 1); }).forEach(function(f){ var lay;
+    if (f.geom === 'poly'){ var u = unitOf(f.unit), col = (u && u.color) || f.color || '#b5b5a8', area = f.kind === 'Area';
+      lay = L.polygon(f.coords, {color: area ? '#ff7a2f' : darken(col), weight: area ? 2 : 1.2, fillColor: col, fillOpacity: area ? 0.06 : 0.4, dashArray: area ? '7 6' : null}); }
+    else { var st = lineStyle(f); L.polyline(f.coords, {color:'#ffffff', weight:st.weight + 3.5, opacity:.6, interactive:false, lineCap:'round'}).addTo(MAP.ft); lay = L.polyline(f.coords, st); }
+    lay.on('click', function(e){ L.DomEvent.stop(e); if (DR){ addDrawPoint(e.latlng); return; } if (!EDIT) featureSheet(f); });
+    var lab = f.geom === 'poly' ? (f.kind === 'Area' ? f.name || 'Area' : f.unit) : [f.kind, f.name].filter(Boolean).join(' · ');
+    if (lab) lay.bindTooltip(esc(lab), {sticky:true}); lay.addTo(MAP.ft); });
+  renderReadings(); drawDeco(); renderMapPanel(); }
+
+/* decorations drawn in screen space: thrust teeth, normal-fault ticks, fold arrows */
+function walk(pts, spacing, start){ var out = [], acc = -(start == null ? spacing/2 : start);
+  for (var i=1;i<pts.length;i++){ var a = pts[i-1], b = pts[i], dx = b.x - a.x, dy = b.y - a.y, L0 = Math.hypot(dx, dy); if (L0 < 1e-6) continue; var t = 0;
+    while (acc + (L0 - t) >= 0){ var need = -acc; t += need; if (t > L0) break; out.push({x:a.x + dx*t/L0, y:a.y + dy*t/L0, tx:dx/L0, ty:dy/L0}); acc = -spacing; }
+    acc += L0 - t; } return out; }
+function drawDeco(){ if (!MAP.m) return; MAP.deco.clearLayers(); var m = MAP.m;
+  function ll(p){ return m.layerPointToLatLng(L.point(p[0], p[1])); }
+  function arrow(x0, y0, x1, y1, col){ var dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, ux = dx/l, uy = dy/l;
+    L.polyline([ll([x0, y0]), ll([x1 - ux*5, y1 - uy*5])], {color:col, weight:2.4, interactive:false}).addTo(MAP.deco);
+    L.polygon([ll([x1, y1]), ll([x1 - ux*8 - uy*4.5, y1 - uy*8 + ux*4.5]), ll([x1 - ux*8 + uy*4.5, y1 - uy*8 - ux*4.5])], {color:col, weight:1, fillColor:col, fillOpacity:1, interactive:false}).addTo(MAP.deco); }
+  state.features.forEach(function(f){ if (f.geom !== 'line') return; var k = f.kind || '';
+    if (!/thrust|normal|anticline|syncline/i.test(k)) return;
+    var pts = f.coords.map(function(c){ return m.latLngToLayerPoint(c); }), side = f.side === 'left' ? -1 : 1, col = lineStyle(f).color;
+    if (/thrust/i.test(k)) walk(pts, 34).forEach(function(p){ var nx = -p.ty*side, ny = p.tx*side;
+      L.polygon([ll([p.x - p.tx*6, p.y - p.ty*6]), ll([p.x + p.tx*6, p.y + p.ty*6]), ll([p.x + nx*9, p.y + ny*9])], {color:col, weight:0, fillColor:col, fillOpacity:1, interactive:false}).addTo(MAP.deco); });
+    else if (/normal/i.test(k)) walk(pts, 46).forEach(function(p){ var nx = -p.ty*side, ny = p.tx*side;
+      L.polyline([ll([p.x, p.y]), ll([p.x + nx*9, p.y + ny*9])], {color:col, weight:2.4, interactive:false}).addTo(MAP.deco);
+      L.circleMarker(ll([p.x + nx*12, p.y + ny*12]), {radius:3, color:col, weight:1, fillColor:col, fillOpacity:1, interactive:false}).addTo(MAP.deco); });
+    else { var total = 0; for (var i=1;i<pts.length;i++) total += pts[i].distanceTo(pts[i-1]); var sp = Math.max(90, total/3);
+      walk(pts, sp, Math.min(total/2, sp/2)).forEach(function(p){ var nx = -p.ty, ny = p.tx, anti = /anticline/i.test(k);
+        [1, -1].forEach(function(s){ if (anti) arrow(p.x + nx*s*4, p.y + ny*s*4, p.x + nx*s*20, p.y + ny*s*20, col); else arrow(p.x + nx*s*22, p.y + ny*s*22, p.x + nx*s*5, p.y + ny*s*5, col); }); });
+      if (f.plunge && pts.length > 1){ var last = pts[pts.length-1], prev = pts[pts.length-2], toEnd = f.plunge === 'end'; var a = toEnd ? prev : pts[1], b = toEnd ? last : pts[0];
+        var dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1; arrow(b.x - dx/l*4, b.y - dy/l*4, b.x + dx/l*14, b.y + dy/l*14, col); } } }); }
+
+/* drawing */
+function startDraw(type){ if (!MAP.m){ toast('The map is not ready'); return; } stopEdit(true); DR = {type:type, pts:[], auto:false};
+  $('drawBar').hidden = false; $('drawEditDone').hidden = true; ['drawUndo','drawGps','drawAutoWrap','drawFinish'].forEach(function(id){ $(id).hidden = false; });
+  $('drawAuto').checked = false; $('map').classList.add('drawing'); renderDraft(); toast(type === 'poly' ? 'Tap the corners of the unit. Tap the first point to snap shut.' : 'Tap along the line. Points snap to nearby lines.'); }
+function addDrawPoint(ll){ ll = snapLL(ll); DR.pts.push([ll.lat, ll.lng]); renderDraft(); }
+function renderDraft(){ MAP.dr.clearLayers(); if (!DR) return; var c = '#ff7a2f';
+  if (DR.pts.length > 1) (DR.type === 'poly' && DR.pts.length > 2 ? L.polygon(DR.pts, {color:c, weight:2.5, dashArray:'6 5', fillOpacity:.12, interactive:false}) : L.polyline(DR.pts, {color:c, weight:3, dashArray:'6 5', interactive:false})).addTo(MAP.dr);
+  DR.pts.forEach(function(p, i){ L.circleMarker(p, {radius: i ? 4.5 : 7, color:'#fff', weight:2, fillColor:c, fillOpacity:1, interactive:false}).addTo(MAP.dr); });
+  var len = DR.pts.length > 1 ? ' · ' + fmtDist(lengthOf(DR.pts)) : '';
+  $('drawInfo').textContent = DR.pts.length + ' point' + (DR.pts.length === 1 ? '' : 's') + len + (DR.auto ? ' · walking' : ''); }
+function snapLL(ll){ var m = MAP.m, p = m.latLngToContainerPoint(ll), best = null, bd = 16;
+  function test(c){ var d = p.distanceTo(m.latLngToContainerPoint(c)); if (d < bd){ bd = d; best = c; } }
+  state.features.forEach(function(f){ f.coords.forEach(test); }); if (DR && DR.pts.length > 2) test(DR.pts[0]);
+  return best ? L.latLng(best[0], best[1]) : ll; }
+function cancelDraw(){ DR = null; MAP.dr && MAP.dr.clearLayers(); $('drawBar').hidden = true; $('map').classList.remove('drawing'); }
+function finishDraw(){ if (!DR) return; var need = DR.type === 'poly' ? 3 : 2; if (DR.pts.length < need){ toast('Needs at least ' + need + ' points'); return; }
+  var pts = DR.pts.slice(); if (DR.type === 'poly' && pts.length > 3 && pts[0][0] === pts[pts.length-1][0] && pts[0][1] === pts[pts.length-1][1]) pts.pop();
+  var geom = DR.type === 'poly' ? 'poly' : 'line'; cancelDraw(); featureSheet(null, {geom:geom, coords:pts}); }
+function onGpsFix(){ if (!MAP.m || !S.gps) return; MAP.gpsL.clearLayers(); var p = [S.gps.lat, S.gps.lon];
+  L.circle(p, {radius:S.gps.acc, color:'#1e88e5', weight:1, fillOpacity:.1, interactive:false}).addTo(MAP.gpsL);
+  L.circleMarker(p, {radius:7, color:'#fff', weight:3, fillColor:'#1e88e5', fillOpacity:1, interactive:false}).addTo(MAP.gpsL);
+  if (DR && DR.auto && S.gps.acc <= 25){ var last = DR.pts[DR.pts.length-1]; if (!last || haversine(last, p) >= (+state.set.walkStep || 10)){ DR.pts.push(p); renderDraft(); } } }
+
+/* reshape */
+function startEdit(f){ if (!MAP.m) return; cancelDraw(); EDIT = {f:f, before:JSON.stringify(f.coords)}; MAP.editL.clearLayers();
+  f.coords.forEach(function(c, i){ var mk = L.marker(c, {draggable:true, icon:L.divIcon({className:'vtx', iconSize:[22,22], iconAnchor:[11,11]})});
+    mk.on('drag', function(){ var p = mk.getLatLng(); f.coords[i] = [p.lat, p.lng]; renderMapData(); }); mk.addTo(MAP.editL); });
+  $('drawBar').hidden = false; ['drawUndo','drawGps','drawAutoWrap','drawFinish'].forEach(function(id){ $(id).hidden = true; }); $('drawEditDone').hidden = false;
+  $('drawInfo').textContent = 'Drag the points to reshape'; }
+function stopEdit(keep){ if (!EDIT) return; if (!keep) EDIT.f.coords = JSON.parse(EDIT.before); EDIT = null; MAP.editL.clearLayers(); $('drawBar').hidden = true; persist(); renderMapData(); }
+
+/* feature sheet */
+function unitOptions(sel){ return state.units.map(function(u){ return '<option' + (u.name === sel ? ' selected' : '') + '>' + esc(u.name) + '</option>'; }).join('') + '<option value="__new">New unit…</option>'; }
+function featureSheet(f, draft){ var isNew = !f;
+  f = f || {id:uid(), geom:draft.geom, coords:draft.coords, kind: draft.geom === 'poly' ? 'Unit' : (state.ui.lastLine || 'Contact'), sub:'observed', side:'right', src:'user', t:new Date().toISOString()};
+  var poly = f.geom === 'poly', mid = f.coords[Math.floor(f.coords.length/2)], size = poly ? 'Area ' + (areaOf(f.coords)/1e4).toFixed(2) + ' ha · perimeter ' + fmtDist(lengthOf(f.coords.concat([f.coords[0]]))) : 'Length ' + fmtDist(lengthOf(f.coords));
+  var html = '<p class="small muted" style="margin:0">' + size + ' · ' + f.coords.length + ' points</p>';
+  if (poly) html += '<div class="seg" id="fkSeg"><button type="button" data-k="Unit" aria-pressed="' + (f.kind !== 'Area') + '">Rock unit</button><button type="button" data-k="Area" aria-pressed="' + (f.kind === 'Area') + '">Area to study</button></div>'
+     + '<div id="fUnitWrap" class="grid2"><label class="f">Unit<select id="fUnit">' + unitOptions(f.unit || (state.units[0] && state.units[0].name)) + '</select></label><label class="f">Colour<input type="color" id="fColor" value="' + esc((unitOf(f.unit) || {}).color || UNIT_COLS[state.units.length % UNIT_COLS.length]) + '" style="height:42px;padding:2px"></label></div>'
+     + '<label class="f" id="fNewWrap">New unit name<input type="text" id="fNewUnit" placeholder="e.g. Kalgoorlie Sequence siltstone" autocomplete="off"></label>';
+  else html += '<div class="grid2"><label class="f">Line<select id="fKind">' + LINE_KINDS.map(function(k){ return '<option' + (k === f.kind ? ' selected' : '') + '>' + k + '</option>'; }).join('') + '</select></label>'
+     + '<label class="f">Certainty<select id="fSub">' + CERT.map(function(c){ return '<option value="' + c[0] + '"' + (c[0] === f.sub ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></label></div>'
+     + '<label class="f" id="fSideWrap">Hanging wall / downthrown side<select id="fSide"><option value="right">Right of the drawing direction</option><option value="left">Left of the drawing direction</option></select></label>'
+     + '<label class="f" id="fPlWrap">Plunge arrow<select id="fPl"><option value="">None</option><option value="end">Toward the last point</option><option value="start">Toward the first point</option></select></label>';
+  html += '<label class="f">Name<input type="text" id="fName" value="' + esc(f.name || '') + '" placeholder="' + (poly ? 'optional' : 'e.g. sandstone / schist contact') + '" autocomplete="off"></label>'
+     + '<label class="f">Note<textarea id="fNote">' + esc(f.note || '') + '</textarea></label>'
+     + '<div class="row"><a class="btn" href="' + gmapsUrl(mid[0], mid[1]) + '" target="_blank" rel="noopener">Open in Google Maps</a>' + (isNew ? '' : '<button class="btn" id="fEdit" type="button">Reshape</button>') + (poly ? '<button class="btn" id="fStereo" type="button">Stereonet of readings inside</button>' : '') + '</div>'
+     + '<div class="acts">' + (isNew ? '' : '<button class="btn danger" id="fDel" type="button">Delete</button>') + '<button class="btn" id="fCancel" type="button">' + (isNew ? 'Discard' : 'Cancel') + '</button><button class="btn primary" id="fSave" type="button">Save</button></div>';
+  openSheet(poly ? (isNew ? 'New area' : 'Area') : (isNew ? 'New line' : 'Line'), html, function(){ var kind = f.kind;
+    function sync(){ if (poly){ document.querySelectorAll('#fkSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.k === kind); });
+        var isUnit = kind !== 'Area'; $('fUnitWrap').hidden = !isUnit; $('fNewWrap').hidden = !isUnit || $('fUnit').value !== '__new';
+        var u = unitOf($('fUnit').value); if (u) $('fColor').value = u.color; }
+      else { var k = $('fKind').value; $('fSideWrap').hidden = !/thrust|normal/i.test(k); $('fPlWrap').hidden = !/anticline|syncline/i.test(k); } }
+    if (poly){ document.querySelectorAll('#fkSeg button').forEach(function(b){ b.onclick = function(){ kind = b.dataset.k; sync(); }; }); $('fUnit').onchange = sync; if (!state.units.length) $('fUnit').value = '__new'; }
+    else { $('fKind').onchange = sync; $('fSide').value = f.side || 'right'; $('fPl').value = f.plunge || ''; }
+    sync();
+    $('fCancel').onclick = closeSheet;
+    if ($('fEdit')) $('fEdit').onclick = function(){ closeSheet(); startEdit(f); };
+    if ($('fStereo')) $('fStereo').onclick = function(){ stereoInside(f); };
+    if ($('fDel')) $('fDel').onclick = function(){ var b = $('fDel'); if (b.dataset.sure){ state.features = state.features.filter(function(x){ return x.id !== f.id; }); persist(); closeSheet(); renderMapData(); toast('Deleted'); } else { b.dataset.sure = '1'; b.textContent = 'Tap again to delete'; } };
+    $('fSave').onclick = function(){ f.name = $('fName').value.trim(); f.note = $('fNote').value.trim(); if (f.src === 'example') f.src = 'user';
+      if (poly){ f.kind = kind; if (kind !== 'Area'){ var un = $('fUnit').value, col = $('fColor').value;
+          if (un === '__new'){ un = $('fNewUnit').value.trim(); if (!un){ toast('Name the new unit'); return; } if (!unitOf(un)) state.units.push({name:un, color:col}); }
+          var u = unitOf(un); if (u) u.color = col; f.unit = un; } else delete f.unit; }
+      else { f.kind = $('fKind').value; f.sub = $('fSub').value; f.side = $('fSide').value; f.plunge = $('fPl').value || null; state.ui.lastLine = f.kind; }
+      if (isNew) state.features.push(f); persist(); closeSheet(); renderMapData(); toast('Saved'); }; }); }
+function stereoInside(f){ var ids = state.recs.filter(function(r){ return r.lat != null && inPoly(r.lat, r.lon, f.coords); }).map(function(r){ return r.id; });
+  if (!ids.length){ toast('No readings inside this area'); return; }
+  state.ui.aSel = {name: f.name || f.unit || 'area', ids:ids}; state.ui.aTypes = null; state.ui.aInit = true; persist(); closeSheet(); showTab('analyse'); }
+
+/* panel: legend + list */
+function lineSample(f){ var st = lineStyle(f); return '<svg width="44" height="14" aria-hidden="true"><line x1="2" y1="7" x2="42" y2="7" stroke="' + st.color + '" stroke-width="' + st.weight + '"' + (st.dashArray ? ' stroke-dasharray="' + st.dashArray + '"' : '') + ' stroke-linecap="' + st.lineCap + '"/></svg>'; }
+function renderMapPanel(){ var used = {}, rows = [];
+  state.features.forEach(function(f){ if (f.geom === 'line') used[f.kind + '|' + (f.sub || 'observed')] = f; });
+  var lg = state.units.map(function(u){ var n = state.features.filter(function(f){ return f.unit === u.name; }).length; return '<span class="lgi"><i style="background:' + esc(u.color) + '"></i>' + esc(u.name) + (n ? ' (' + n + ')' : '') + '</span>'; })
+    .concat(Object.keys(used).map(function(k){ var f = used[k], c = CERT.find(function(x){ return x[0] === (f.sub || 'observed'); }); return '<span class="lgi">' + lineSample(f) + esc(f.kind) + (f.sub && f.sub !== 'observed' ? ', ' + c[1].toLowerCase() : '') + '</span>'; }));
+  $('mapLegend').innerHTML = lg.length ? lg.join('') : '<span class="muted">Draw a contact or a unit to start the legend.</span>';
+  state.features.slice().reverse().forEach(function(f){ var poly = f.geom === 'poly', u = unitOf(f.unit), sw = poly ? '<i class="sw" style="background:' + esc((u && u.color) || '#b5b5a8') + '"></i>' : lineSample(f);
+    rows.push('<li><button type="button" class="rec frow" data-fid="' + esc(f.id) + '">' + sw + '<span class="min0"><span class="t">' + esc(poly ? (f.kind === 'Area' ? 'Area' : f.unit || 'Unit') : f.kind) + (f.src === 'example' ? ' <span class="tag ex">example</span>' : '') + '</span><span class="m">' + esc([f.name, poly ? null : (CERT.find(function(c){ return c[0] === (f.sub || 'observed'); }) || [0,''])[1], f.note].filter(Boolean).join(' · ')) + '</span></span><span class="v">' + (poly ? (areaOf(f.coords)/1e4).toFixed(1) + ' ha' : fmtDist(lengthOf(f.coords))) + '</span></button></li>'); });
+  $('featList').innerHTML = rows.join('') || '<li class="muted small">No lines or units yet.</li>'; }
+
+/* image overlays (scanned maps) */
+function renderOverlays(){ if (!MAP.m) return; MAP.ovL.clearLayers();
+  state.overlays.forEach(function(o){ if (!o.show) return; PhotoDB.get('ov:' + o.id).then(function(b){ if (!b || !MAP.m) return; var u = URL.createObjectURL(b);
+    L.imageOverlay(u, [[o.s, o.w], [o.n, o.e]], {opacity:o.opacity, interactive:false}).addTo(MAP.ovL); }); }); }
+function overlaySheet(){ var b = MAP.m ? MAP.m.getBounds() : null;
+  var list = state.overlays.map(function(o){ return '<li class="row-between" style="list-style:none"><label class="row small"><input type="checkbox" data-ov="' + esc(o.id) + '"' + (o.show ? ' checked' : '') + '> ' + esc(o.name) + '</label><button class="btn" type="button" data-ovdel="' + esc(o.id) + '">Remove</button></li>'; }).join('');
+  var html = (list ? '<ul style="margin:0;padding:0;display:flex;flex-direction:column;gap:6px">' + list + '</ul>' : '')
+    + '<p class="small muted" style="margin:0">Lay a scanned or photographed map over the base map. Give the latitude and longitude of its top-left and bottom-right corners (north-up maps). The boxes start with the current view.</p>'
+    + '<label class="btn" for="ovFile" style="cursor:pointer"><span id="ovFileLbl">Choose the map image</span></label><input type="file" id="ovFile" accept="image/*" hidden>'
+    + '<div class="grid2"><label class="f">North (top) latitude<input type="number" step="any" id="ovN" value="' + (b ? b.getNorth().toFixed(6) : '') + '"></label><label class="f">West (left) longitude<input type="number" step="any" id="ovW" value="' + (b ? b.getWest().toFixed(6) : '') + '"></label></div>'
+    + '<div class="grid2"><label class="f">South (bottom) latitude<input type="number" step="any" id="ovS" value="' + (b ? b.getSouth().toFixed(6) : '') + '"></label><label class="f">East (right) longitude<input type="number" step="any" id="ovE" value="' + (b ? b.getEast().toFixed(6) : '') + '"></label></div>'
+    + '<label class="f">See-through<input type="range" id="ovOp" min="0.1" max="1" step="0.05" value="0.65"></label>'
+    + '<div class="acts"><button class="btn" id="ovClose" type="button">Close</button><button class="btn primary" id="ovAdd" type="button">Add to map</button></div>';
+  openSheet('Map images', html, function(){ var file = null;
+    $('ovFile').onchange = function(){ file = $('ovFile').files[0]; $('ovFileLbl').textContent = file ? file.name : 'Choose the map image'; };
+    document.querySelectorAll('[data-ov]').forEach(function(c){ c.onchange = function(){ var o = state.overlays.find(function(x){ return x.id === c.dataset.ov; }); o.show = c.checked; persist(); renderOverlays(); }; });
+    document.querySelectorAll('[data-ovdel]').forEach(function(c){ c.onclick = function(){ state.overlays = state.overlays.filter(function(x){ return x.id !== c.dataset.ovdel; }); PhotoDB.del('ov:' + c.dataset.ovdel); persist(); renderOverlays(); closeSheet(); overlaySheet(); }; });
+    $('ovClose').onclick = closeSheet;
+    $('ovAdd').onclick = function(){ var n = +$('ovN').value, s = +$('ovS').value, w = +$('ovW').value, e = +$('ovE').value;
+      if (!file){ toast('Choose an image first'); return; } if (!(n > s) || !(e > w)){ toast('North must be above south and east right of west'); return; }
+      var o = {id:uid(), name:file.name, n:n, s:s, e:e, w:w, opacity:+$('ovOp').value, show:true}; PhotoDB.put('ov:' + o.id, file).then(function(){ renderOverlays(); });
+      state.overlays.push(o); persist(); closeSheet(); toast('Map image added'); }; }); }
+
+/* map import / export */
+function importMapFile(text, name){ var added = 0, pts = 0, have = {}; state.features.forEach(function(f){ have[f.id] = 1; });
+  function addLine(c, props){ if (c.length < 2 || (props.id && have[props.id])) return; state.features.push({id:props.id || uid(), geom:'line', coords:c, kind: LINE_KINDS.indexOf(props.kind) >= 0 ? props.kind : (/fault/i.test(props.name || '') ? 'Fault' : 'Contact'), sub:props.sub || 'observed', side:props.side || 'right', name:props.name || '', note:props.note || '', src:'import', t:new Date().toISOString()}); added++; }
+  function addPoly(c, props){ if (c.length < 3 || (props.id && have[props.id])) return; var un = props.unit || props.name || 'Imported unit'; if (props.kind !== 'Area' && !unitOf(un)) state.units.push({name:un, color: props.color || UNIT_COLS[state.units.length % UNIT_COLS.length]});
+    state.features.push({id:props.id || uid(), geom:'poly', coords:c, kind: props.kind === 'Area' ? 'Area' : 'Unit', unit: props.kind === 'Area' ? undefined : un, name:props.kind === 'Area' ? (props.name || '') : '', note:props.note || '', src:'import', t:new Date().toISOString()}); added++; }
+  if (/^\s*</.test(text)){ var doc = new DOMParser().parseFromString(text, 'application/xml');
+    Array.prototype.forEach.call(doc.getElementsByTagName('Placemark'), function(pm){ var nm = (pm.getElementsByTagName('name')[0] || {}).textContent || '';
+      function coords(el){ return el.textContent.trim().split(/\s+/).map(function(t){ var a = t.split(','); return [+a[1], +a[0]]; }).filter(function(p){ return isFinite(p[0]) && isFinite(p[1]); }); }
+      Array.prototype.forEach.call(pm.getElementsByTagName('LineString'), function(ls){ var c = ls.getElementsByTagName('coordinates')[0]; if (c) addLine(coords(c), {name:nm}); });
+      Array.prototype.forEach.call(pm.getElementsByTagName('Polygon'), function(pg){ var c = pg.getElementsByTagName('coordinates')[0]; if (c){ var cc = coords(c); if (cc.length > 3) cc.pop(); addPoly(cc, {name:nm}); } }); }); }
+  else { var d = JSON.parse(text), feats = d.type === 'FeatureCollection' ? d.features : d.type === 'Feature' ? [d] : [];
+    feats.forEach(function(ft){ var g = ft.geometry || {}, p = ft.properties || {}; function cv(a){ return a.map(function(q){ return [q[1], q[0]]; }); }
+      if (g.type === 'LineString') addLine(cv(g.coordinates), p); else if (g.type === 'MultiLineString') g.coordinates.forEach(function(l){ addLine(cv(l), p); });
+      else if (g.type === 'Polygon'){ var r = cv(g.coordinates[0]); if (r.length > 3) r.pop(); addPoly(r, p); }
+      else if (g.type === 'MultiPolygon') g.coordinates.forEach(function(pg){ var r = cv(pg[0]); if (r.length > 3) r.pop(); addPoly(r, p); });
+      else if (g.type === 'Point' && (p.dip != null || p.trend != null) && !state.recs.some(function(r){ return r.id === p.id; })){
+        var rec = Object.assign({}, p, {id:p.id || uid(), lat:g.coordinates[1], lon:g.coordinates[0], src:'import', station:p.station || 'Imported', type:p.type || (p.trend != null ? 'Lineation' : 'Plane')});
+        rec.kind = rec.kind || (rec.dip != null && rec.trend != null ? 'pl' : rec.dip != null ? 'plane' : 'line'); state.recs.push(rec); pts++; } }); }
+  persist(); renderMapData(); return {features:added, readings:pts}; }
+function mapGeoJSON(){ var feats = state.features.filter(function(f){ return f.src !== 'example' || !state.features.some(function(x){ return x.src !== 'example'; }); }).map(function(f){ var u = unitOf(f.unit);
+    var props = {id:f.id, kind:f.kind, name:f.name || '', note:f.note || ''}; if (f.geom === 'line'){ props.sub = f.sub; props.side = f.side; props.length_m = Math.round(lengthOf(f.coords)); } else { props.unit = f.unit || ''; props.color = u ? u.color : ''; props.area_m2 = Math.round(areaOf(f.coords)); }
+    var c = f.coords.map(function(p){ return [+p[1].toFixed(7), +p[0].toFixed(7)]; });
+    return {type:'Feature', properties:props, geometry: f.geom === 'line' ? {type:'LineString', coordinates:c} : {type:'Polygon', coordinates:[c.concat([c[0]])]}}; });
+  var pts = JSON.parse(toGeoJSON(exportRecs())).features; return JSON.stringify({type:'FeatureCollection', name:'Outcrop map', features:feats.concat(pts)}, null, 1); }
+function kmlColor(hex, a){ var h = (hex || '#888888').replace('#', ''); if (h.length === 3) h = h.split('').map(function(x){ return x + x; }).join(''); var m = /rgb\((\d+),(\d+),(\d+)\)/.exec(hex || ''); if (m) h = [m[1], m[2], m[3]].map(function(x){ return ('0' + (+x).toString(16)).slice(-2); }).join('');
+  return a + h.slice(4, 6) + h.slice(2, 4) + h.slice(0, 2); }
+function mapKML(){ var pm = state.features.map(function(f){ var c = f.coords.map(function(p){ return (+p[1]).toFixed(7) + ',' + (+p[0]).toFixed(7) + ',0'; });
+    if (f.geom === 'line'){ var st = lineStyle(f); return '<Placemark><name>' + esc([f.kind, f.name].filter(Boolean).join(': ')) + '</name><description>' + esc(f.note || '') + '</description><Style><LineStyle><color>' + kmlColor(st.color, 'ff') + '</color><width>' + st.weight + '</width></LineStyle></Style><LineString><tessellate>1</tessellate><coordinates>' + c.join(' ') + '</coordinates></LineString></Placemark>'; }
+    var u = unitOf(f.unit), col = (u && u.color) || '#b5b5a8';
+    return '<Placemark><name>' + esc(f.unit || f.name || 'Area') + '</name><Style><LineStyle><color>' + kmlColor(col, 'ff') + '</color></LineStyle><PolyStyle><color>' + kmlColor(col, '80') + '</color></PolyStyle></Style><Polygon><outerBoundaryIs><LinearRing><coordinates>' + c.concat([c[0]]).join(' ') + '</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>'; });
+  var rd = toKML(exportRecs()).replace(/^[\s\S]*?<name>Outcrop field book<\/name>/, '').replace(/<\/Document>[\s\S]*$/, '');
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Outcrop map</name><Folder><name>Lines and units</name>' + pm.join('') + '</Folder><Folder><name>Readings</name>' + rd + '</Folder></Document></kml>\n'; }
+function seedExampleMap(){ var lat0 = -30.7485 + 4.5*0.00042, lon0 = 121.4620 + 4.5*0.00031, t = new Date('2026-10-06T08:30:00+08:00').toISOString();
+  function at(dE, dN){ return [lat0 + dN/111320, lon0 + dE/(111320*Math.cos(lat0*GM.D))]; }
+  var ax = 285*GM.D, sx = Math.sin(ax), cx = Math.cos(ax);
+  state.units = [{name:'Sandstone (example)', color:'#e8c547'}, {name:'Siltstone (example)', color:'#8fbf5a'}];
+  state.features = [
+    {id:'exf1', geom:'line', kind:'Anticline trace', sub:'approx', plunge:'end', coords:[at(-sx*320, -cx*320), at(0, 0), at(sx*340, cx*340)], name:'Example fold', src:'example', t:t},
+    {id:'exf2', geom:'line', kind:'Contact', sub:'observed', coords:[at(-260, -170), at(-80, -235), at(120, -260), at(300, -215)], name:'sandstone / siltstone', src:'example', t:t},
+    {id:'exf3', geom:'line', kind:'Thrust fault', sub:'inferred', side:'left', coords:[at(-300, 260), at(-60, 300), at(240, 250)], src:'example', t:t},
+    {id:'exf4', geom:'poly', kind:'Unit', unit:'Siltstone (example)', coords:[at(-260, -170), at(-80, -235), at(120, -260), at(300, -215), at(300, -420), at(-260, -420)], src:'example', t:t}]; }
+
+/* ---------- guide ---------- */
+var GUIDE = [
+ {h:'Measuring with the phone', b:'<p>Plane: lay the back of the phone flat on the surface, any way round, and hold still until the bar turns green. Line: lay the long edge of the phone along the lineation, top end pointing down the plunge or up it (either works). Plane + line: measure the plane first, then the line on it; the app works out the rake and how far the line sits off the plane.</p><ul><li>Calibrate the compass at the start of each day and whenever readings jump: move the phone in a figure-of-eight, away from the hammer, vehicles, fences and magnetite-rich rock.</li><li>Check the phone against an analogue compass on a known bearing each day and note the difference.</li><li>Take several readings of each surface. Phone azimuths scatter more than a good analogue compass. In a test of about 350 paired readings, Steiner (2018) found a median difference of 13° and advised extra care with dips steeper than about 40°.</li><li>Dip comes from the accelerometer and is usually better than the dip direction, which comes from the magnetometer.</li><li>On rough or small surfaces, rest the phone on a notebook or clipboard laid on the surface. That also stops the camera bump tilting the phone.</li><li>Allmendinger et al. (2017) recommend redundancy: repeat readings, compare devices and keep an analogue check.</li></ul>'},
+ {h:'Orientation conventions', b:'<table class="gt"><tr><th>Term</th><th>Meaning</th></tr><tr><td>Dip / dip direction</td><td>35/120: dips 35° toward 120°. The form this app stores.</td></tr><tr><td>Strike (RHR)</td><td>Right-hand rule: looking along strike, the plane dips to your right. Strike = dip direction − 90°.</td></tr><tr><td>Quadrant</td><td>N60E/35SE = strike 060, dips 35° to the south-east.</td></tr><tr><td>Plunge → trend</td><td>25→210: a line plunging 25° toward 210°.</td></tr><tr><td>Rake (pitch)</td><td>Angle within the plane from the strike line (RHR) to the line, 0–180°.</td></tr><tr><td>Pole</td><td>The line square to a plane; plunge = 90 − dip, trend = dip direction + 180°.</td></tr></table><p>Grid north differs from true north by the grid convergence, which the app takes from your GPS position when Grid north is chosen.</p>'},
+ {h:'Igneous rocks', b:'<div class="tablewrap"><table class="gt"><tr><th>Texture</th><th>Felsic</th><th>Intermediate</th><th>Mafic</th><th>Ultramafic</th></tr><tr><td>Coarse (phaneritic)</td><td>Granite, granodiorite</td><td>Diorite</td><td>Gabbro</td><td>Peridotite, dunite</td></tr><tr><td>Medium</td><td>Microgranite</td><td>Microdiorite</td><td>Dolerite</td><td>—</td></tr><tr><td>Fine (aphanitic)</td><td>Rhyolite, dacite</td><td>Andesite</td><td>Basalt</td><td>Komatiite (spinifex)</td></tr><tr><td>Key minerals</td><td>Quartz, K-feldspar, biotite</td><td>Plagioclase, hornblende</td><td>Ca-plagioclase, pyroxene</td><td>Olivine, pyroxene</td></tr><tr><td>Colour index</td><td>Light (&lt;15% dark)</td><td>15–45%</td><td>45–90%</td><td>&gt;90%</td></tr></table></div><p>Porphyritic: large crystals in a finer groundmass. Pyroclastic: tuff (&lt;2 mm fragments), lapilli tuff (2–64 mm), agglomerate or breccia (&gt;64 mm).</p>'},
+ {h:'Sedimentary rocks and grain size', b:'<div class="tablewrap"><table class="gt"><tr><th>Wentworth class</th><th>Size</th><th>Rock</th></tr><tr><td>Boulder</td><td class="n">&gt;256 mm</td><td rowspan="4">Conglomerate (rounded) or breccia (angular)</td></tr><tr><td>Cobble</td><td class="n">64–256 mm</td></tr><tr><td>Pebble</td><td class="n">4–64 mm</td></tr><tr><td>Granule</td><td class="n">2–4 mm</td></tr><tr><td>Sand: v. coarse → v. fine</td><td class="n">2 → 0.0625 mm</td><td>Sandstone (quartz arenite, arkose, greywacke)</td></tr><tr><td>Silt</td><td class="n">3.9–62.5 µm</td><td>Siltstone; feels gritty on the teeth</td></tr><tr><td>Clay</td><td class="n">&lt;3.9 µm</td><td>Mudstone; shale if fissile</td></tr></table></div><ul><li>Carbonates fizz in cold dilute HCl (limestone) or only when powdered (dolomite). Dunham names: mudstone, wackestone, packstone, grainstone, boundstone.</li><li>Chert: hard (scratches steel), conchoidal fracture. BIF: alternating iron oxide and chert bands; magnetic where magnetite-rich.</li><li>Record sorting, rounding, sedimentary structures and way-up (graded beds, cross-bed truncations, load casts, ripple crests).</li></ul>'},
+ {h:'Metamorphic rocks', b:'<ul><li><b>Slate</b>: fine, dull, slaty cleavage. <b>Phyllite</b>: silky sheen, crenulated. <b>Schist</b>: visible micas, schistosity; name by minerals (garnet–mica schist). <b>Gneiss</b>: coarse light/dark banding. <b>Migmatite</b>: partly melted, leucosomes.</li><li>Non-foliated: <b>quartzite</b> breaks through the grains; <b>marble</b> fizzes; <b>hornfels</b> is fine, hard and splintery (contact aureoles).</li><li>From mafic rocks: greenschist / <b>greenstone</b> (chlorite, epidote, actinolite) → <b>amphibolite</b> (hornblende + plagioclase) → granulite.</li><li>From ultramafic rocks: <b>serpentinite</b> (green, waxy), talc–carbonate, chlorite schist.</li><li>Index minerals in pelites, rising grade: chlorite → biotite → garnet → staurolite → kyanite → sillimanite.</li></ul>'},
+ {h:'Mineral quick test', b:'<div class="tablewrap"><table class="gt"><tr><th>Mineral</th><th>H</th><th>Key test</th></tr>' + [
+   ['Quartz','7','Glassy, no cleavage, conchoidal fracture'],['K-feldspar','6','Pink/white, two cleavages at 90°, perthite'],['Plagioclase','6','Fine parallel striations on cleavage faces'],['Muscovite','2–2.5','Clear flexible sheets'],['Biotite','2.5–3','Black-brown flexible sheets'],['Chlorite','2–2.5','Green flakes, flexible but not elastic'],['Hornblende','5–6','Black-green, cleavages at 56°/124°'],['Pyroxene (augite)','5.5–6','Dark green-black, cleavages near 90°'],['Olivine','6.5–7','Olive green, granular, no cleavage'],['Garnet','6.5–7.5','Equant dodecahedra, red-brown, no cleavage'],['Epidote','6–7','Pistachio green'],['Tourmaline','7–7.5','Black striated prisms, rounded triangle section'],['Calcite','3','Rhombic cleavage, fizzes in cold dilute HCl'],['Dolomite','3.5–4','Fizzes only when powdered'],['Talc','1','Soapy, marks paper'],['Serpentine','2.5–4','Green, waxy or fibrous'],['Pyrite','6–6.5','Brassy cubes, greenish-black streak'],['Chalcopyrite','3.5–4','Brassy-yellow, softer than pyrite, tarnishes'],['Arsenopyrite','5.5–6','Silver-white, garlic smell when struck'],['Galena','2.5','Cubic cleavage, lead-grey, very heavy'],['Sphalerite','3.5–4','Resinous, pale yellow-brown streak'],['Magnetite','5.5–6.5','Black streak, strongly magnetic'],['Hematite','5–6.5','Red-brown streak'],['Goethite','5–5.5','Yellow-brown streak'],['Gold','2.5–3','Malleable, yellow streak, does not tarnish']
+  ].map(function(m){ return '<tr><td>' + m[0] + '</td><td class="n">' + m[1] + '</td><td>' + m[2] + '</td></tr>'; }).join('') + '</table></div><p>Mohs reference: fingernail ≈ 2.5, copper coin ≈ 3.5, steel knife ≈ 5.5, glass ≈ 5.5, streak plate ≈ 6.5.</p>'},
+ {h:'Rock strength in the field (ISRM)', b:'<div class="tablewrap"><table class="gt"><tr><th>Grade</th><th>UCS (MPa)</th><th>Field test</th></tr><tr><td>R6 Extremely strong</td><td class="n">&gt;250</td><td>Hammer only chips it</td></tr><tr><td>R5 Very strong</td><td class="n">100–250</td><td>Needs many hammer blows to break</td></tr><tr><td>R4 Strong</td><td class="n">50–100</td><td>Needs more than one blow to break</td></tr><tr><td>R3 Medium strong</td><td class="n">25–50</td><td>Knife cannot scrape it; one firm blow breaks it</td></tr><tr><td>R2 Weak</td><td class="n">5–25</td><td>Knife peels it with difficulty; hammer point dents it</td></tr><tr><td>R1 Very weak</td><td class="n">1–5</td><td>Crumbles under firm hammer-point blows; knife peels it</td></tr><tr><td>R0 Extremely weak</td><td class="n">0.25–1</td><td>Thumbnail dents it</td></tr></table></div><p>After the field estimates tabulated by Hoek et al. (1998).</p>'},
+ {h:'Weathering grades', b:'<div class="tablewrap"><table class="gt"><tr><th>Grade</th><th>Description</th></tr><tr><td>I Fresh</td><td>No visible weathering; slight discolouration on main joints at most</td></tr><tr><td>II Slightly</td><td>Discolouration of the rock and joint surfaces</td></tr><tr><td>III Moderately</td><td>Less than half the rock decomposed to soil; fresh or discoloured core stones</td></tr><tr><td>IV Highly</td><td>More than half decomposed to soil</td></tr><tr><td>V Completely</td><td>All decomposed to soil; original fabric still visible</td></tr><tr><td>VI Residual soil</td><td>Fabric destroyed</td></tr></table></div>'},
+ {h:'Mapping contacts and units', b:'<ul><li>Draw a line with <b>Map ▸ Draw contact or fault</b>: tap along it, or tick <b>Walk it</b> and walk the contact so a point is added every 10 m from GPS.</li><li>Line symbols follow common map practice: solid where observed, long dashes where approximate, short dashes where inferred, dots where concealed. Faults are red; thrust teeth and normal-fault ticks go on the hanging wall or downthrown side.</li><li>Draw rock units as areas. Points snap to nearby line points, so units can share the contacts you have drawn.</li><li>Draw an <b>Area to study</b> around an outcrop or domain and open its stereonet to see only the readings inside it.</li><li><b>Rule of Vs</b>: where a contact crosses a valley, it Vs upstream if it dips upstream or dips downstream more gently than the valley floor; it Vs downstream if it dips downstream more steeply than the valley floor; a vertical contact runs straight across.</li><li>A contact\'s trace on the map should follow the strike measured nearby on flat ground. Where it does not, check the dip and the topography.</li></ul>'},
+ {h:'Folds, faults and shear sense', b:'<ul><li><b>Interlimb angle</b> (Fleuty 1964): gentle 180–120°, open 120–70°, close 70–30°, tight 30–0°, isoclinal 0°.</li><li><b>Plunge</b>: sub-horizontal &lt;10°, gently 10–30°, moderately 30–60°, steeply 60–80°, sub-vertical &gt;80°.</li><li><b>On the net</b>: bedding poles around a fold fall on a great circle (π girdle); its pole is the fold axis. The intersection of the two limb planes (β) should agree with it and with measured hinge lines.</li><li><b>Parasitic folds</b> (Pumpelly\'s rule): Z folds on the left limb and S folds on the right limb of a synform, looking down the plunge; M folds near the hinge.</li><li><b>Shear sense</b>: S–C fabrics, σ and δ porphyroclasts, shear bands, mica fish, asymmetric folds, offset markers. Use slickenline steps only where accretion steps are clear.</li><li>Record fault planes with their slickenlines (Plane + line) so rake and sense can be read later.</li></ul>'},
+ {h:'Outcrop description checklist', b:'<ul><li>Station, position and accuracy, photo with scale and north arrow</li><li>Exposure: in situ, subcrop or float; size</li><li>Rock name, fresh and weathered colour, grain size, texture, minerals with estimated %</li><li>Strength (R0–R6) and weathering (I–VI)</li><li>Fabric and structures: bedding, foliation, joints (spacing, aperture, infill), veins, faults</li><li>Alteration and mineralisation: style, minerals, intensity</li><li>Samples: ID, type, bag number, what it is for</li><li>Relationships: contacts, cross-cutting order, way-up</li></ul>'},
+ {h:'Field kit and safety', b:'<ul><li>Hammer, hand lens (10×), dilute HCl dropper, magnet, knife or scratch tip, streak plate, grain-size card</li><li>Analogue compass for daily checks, spare battery, waterproof phone case</li><li>Notebook, pencil, sample bags, marker, flagging tape</li><li>PPE: safety glasses for hammering, hi-vis, boots, hat, sun protection</li><li>Water, food, first aid kit, satellite messenger or radio; leave your route and return time with someone</li><li>Stay back from loose faces and pit walls, keep out of shafts and old workings, and follow site access rules</li></ul>'},
+ {h:'Geological time (rounded)', b:'<div class="tablewrap"><table class="gt"><tr><th>Unit</th><th>Base (Ma)</th></tr>' + [['Quaternary','2.58'],['Neogene','23.0'],['Paleogene','66.0'],['Cretaceous','≈145'],['Jurassic','201.4'],['Triassic','251.9'],['Permian','298.9'],['Carboniferous','358.9'],['Devonian','≈419'],['Silurian','443.8'],['Ordovician','485.4'],['Cambrian','538.8'],['Proterozoic','2500'],['Archean','≈4000']].map(function(x){ return '<tr><td>' + x[0] + '</td><td class="n">' + x[1] + '</td></tr>'; }).join('') + '</table></div><p>Check the current ICS chart for exact boundary ages.</p>'},
+ {h:'References', b:'<ul><li>Allmendinger, R. W., Siron, C. R., &amp; Scott, C. P. (2017). Structural data collection with mobile devices: Accuracy, redundancy, and best practices. <i>Journal of Structural Geology, 102</i>, 98–112.</li><li>Nováková, L., &amp; Pavlis, T. L. (2017). Assessment of the precision of smart phones and tablets for measurement of planar orientations. <i>Journal of Structural Geology, 97</i>, 93–103.</li><li>Steiner, T. (2018). Rocklogger – can a smartphone replace a geological compass? XXI Congress of the CBGA, Salzburg, abstract 383.</li><li>Hoek, E., Marinos, P., &amp; Benissi, M. (1998). Applicability of the Geological Strength Index (GSI) classification for very weak and sheared rock masses. <i>Bulletin of Engineering Geology and the Environment, 57</i>, 151–160.</li><li>Fleuty, M. J. (1964). The description of folds. <i>Proceedings of the Geologists\' Association, 75</i>, 461–492.</li><li>Woodcock, N. H. (1977). Specification of fabric shapes using an eigenvalue method. <i>GSA Bulletin, 88</i>, 1231–1236.</li><li>Markland, J. T. (1972). A useful technique for estimating the stability of rock slopes when the rigid wedge slide type of failure is expected. <i>Imperial College Rock Mechanics Research Report 19</i>.</li></ul>'}
+];
+function renderGuide(){ var q = $('gSearch').value.trim().toLowerCase(), out = '';
+  GUIDE.forEach(function(s, i){ var plain = (s.h + ' ' + s.b.replace(/<[^>]+>/g, ' ')).toLowerCase(); if (q && plain.indexOf(q) < 0) return;
+    var body = s.b; if (q && q.length > 1){ body = body.replace(/>([^<]+)</g, function(m, t){ var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig'); return '>' + t.replace(re, '<mark>$1</mark>') + '<'; }); }
+    out += '<details' + (q || i === 0 ? ' open' : '') + '><summary>' + s.h + '</summary><div class="gbody">' + body + '</div></details>'; });
+  $('gBody').innerHTML = out || '<p class="muted">Nothing found. Try a mineral, rock or term.</p>'; }
+
+/* ---------- wiring ---------- */
+function showTab(v){ state.ui.tab = v; document.querySelectorAll('.tabs button').forEach(function(b){ b.setAttribute('aria-selected', b.dataset.v === v); });
+  ['measure','map','log','analyse','guide'].forEach(function(n){ $('v-' + n).hidden = n !== v; }); $('main').scrollTop = 0;
+  if (v === 'log') renderLog(); if (v === 'analyse') requestAnimationFrame(renderAnalyse); if (v === 'guide' && !$('gBody').innerHTML) renderGuide(); if (v === 'measure') drawDial(null); if (v === 'map') requestAnimationFrame(initMap); else { cancelDraw(); stopEdit(true); } persist(); }
+function refreshAll(){ renderRecent(); if (MAP.m) renderMapData(); if (state.ui.tab === 'log') renderLog(); if (state.ui.tab === 'analyse') renderAnalyse(); }
+function wire(){
+  document.querySelectorAll('.tabs button').forEach(function(b){ b.onclick = function(){ showTab(b.dataset.v); }; });
+  document.querySelectorAll('#modeSeg button').forEach(function(b){ b.onclick = function(){ setMode(b.dataset.mode); }; });
+  $('typeChips').addEventListener('click', function(e){ var b = e.target.closest('.chip'); if (!b) return; if (activeKind() === 'line' && state.ui.mode === 'pl') state.ui.ltype = b.dataset.t; else state.ui.type = b.dataset.t; renderTypeChips(); persist(); });
+  $('btnStart').onclick = function(){ $('sensorBanner').hidden = true; startCompass(); };
+  $('btnManual').onclick = function(){ recordSheet(null); };
+  $('btnRecord').onclick = function(){ var r = currentReading(); if (!r){ toast('No reading yet. Hold the phone on the surface.'); return; } recordFromPhone(r, false); };
+  $('btnUndo').onclick = function(){ var r = state.recs.filter(function(x){ return x.src !== 'example'; }).pop(); if (!r) return; state.recs = state.recs.filter(function(x){ return x !== r; }); if (r.photo) PhotoDB.del(r.id); persist(); renderRecent(); toast('Removed ' + describe(r)); $('btnUndo').hidden = true; };
+  $('station').value = state.station; $('station').onchange = function(){ state.station = $('station').value.trim() || state.station; persist(); };
+  $('btnNextSt').onclick = function(){ state.station = nextStation($('station').value.trim() || state.station); $('station').value = state.station; persist(); toast('Station ' + state.station); };
+  $('autoRec').checked = !!state.set.autoRec; $('autoRec').onchange = function(){ state.set.autoRec = $('autoRec').checked; S.armed = true; persist(); };
+  $('photo').onchange = function(){ var f = $('photo').files[0]; if (!f) return; shrink(f).then(function(b){ pendingPhoto = b; $('photoLbl').textContent = 'Photo ready (' + Math.round(b.size/1024) + ' kB)'; }); $('photo').value = ''; };
+  $('recent').addEventListener('click', openRec); $('loglist').addEventListener('click', openRec);
+  $('btnSettings').onclick = settingsSheet;
+  ['fStation','fType'].forEach(function(id){ $(id).onchange = renderLog; }); $('fText').oninput = renderLog;
+  $('btnMore').onclick = function(){ logLimit += 300; renderLog(); };
+  $('btnClearEx').onclick = function(){ state.recs = state.recs.filter(function(r){ return r.src !== 'example'; }); state.features = state.features.filter(function(f){ return f.src !== 'example'; }); state.units = state.units.filter(function(u){ return !/\(example\)$/.test(u.name); }); state.ui.aSel = null; state.ui.aTypes = null; persist(); refreshAll(); renderLog(); toast('Examples removed'); };
+  $('exCsv').onclick = function(){ saveFile('outcrop_' + stamp() + '.csv', toCSV(exportRecs()), 'text/csv'); };
+  $('exGeo').onclick = function(){ saveFile('outcrop_' + stamp() + '.json', toGeoJSON(exportRecs()), 'application/geo+json'); };
+  $('exKml').onclick = function(){ saveFile('outcrop_' + stamp() + '.kml', toKML(exportRecs()), 'application/vnd.google-earth.kml+xml'); };
+  $('exBak').onclick = function(){ backup().then(function(txt){ saveFile('outcrop_backup_' + stamp() + '.json', txt, 'application/json'); }); };
+  if (!inViewer && navigator.canShare){ try{ if (navigator.canShare({files:[new File(['a'], 'a.csv', {type:'text/csv'})]})) $('exShare').hidden = false; }catch(e){} }
+  $('exShare').onclick = function(){ var f = new File([toCSV(exportRecs())], 'outcrop_' + stamp() + '.csv', {type:'text/csv'}); navigator.share({files:[f], title:'Outcrop readings'}).catch(function(){}); };
+  $('importFile').onchange = function(){ var f = $('importFile').files[0]; if (!f) return; var fr = new FileReader();
+    fr.onload = function(){ var txt = String(fr.result); try{ if (/^\s*\{/.test(txt)){ var n = importJSON(txt); toast('Added ' + n + ' readings from the backup'); }
+      else { var r = importCSV(txt); toast(r.n ? 'Added ' + r.n + ' readings' + (r.skipped ? ', skipped ' + r.skipped + ' without an orientation' : '') : 'No dip/dip direction, strike or trend/plunge columns found'); } }
+      catch(e){ toast('Could not read that file'); } persist(); refreshAll(); renderLog(); };
+    fr.readAsText(f); $('importFile').value = ''; };
+  document.querySelectorAll('#projSeg button').forEach(function(b){ b.onclick = function(){ state.ui.proj = b.dataset.p; persist(); renderAnalyse(); }; });
+  $('aShow').onchange = function(){ state.ui.show = $('aShow').value; persist(); renderAnalyse(); };
+  $('aStation').onchange = function(){ state.ui.aStation = $('aStation').value; persist(); renderAnalyse(); };
+  $('aTypes').addEventListener('click', function(e){ var b = e.target.closest('.chip'); if (!b) return; var t = b.dataset.at;
+    if (t === '#sel') state.ui.aSel = null; else if (t === '*') state.ui.aTypes = null; else { var cur = state.ui.aTypes ? state.ui.aTypes.slice() : []; var i = cur.indexOf(t); if (i >= 0) cur.splice(i,1); else cur.push(t); state.ui.aTypes = cur.length ? cur : null; }
+    persist(); renderAnalyse(); });
+  var net = $('net'), down = false; net.addEventListener('pointerdown', function(e){ down = true; netPointer(e); }); net.addEventListener('pointermove', function(e){ if (down || e.pointerType === 'mouse') netPointer(e); });
+  window.addEventListener('pointerup', function(){ down = false; });
+  ['tA','tB','adDip','adDd','adAz','ttW','ttDip','ttSl','kmDip','kmDd','kmPhi'].forEach(function(id){ $(id).addEventListener('input', runTools); }); $('ttSame').onchange = runTools;
+  $('gSearch').oninput = renderGuide;
+  $('rockList').innerHTML = ROCKS.map(function(r){ return '<option value="' + r + '">'; }).join('');
+  var mq = window.matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', function(){ refreshAll(); drawDial(null); });
+  window.addEventListener('resize', function(){ if (state.ui.tab === 'analyse' && lastA){ drawNet(lastA); drawRose(lastA); } drawDial(null); if (MAP.m) MAP.m.invalidateSize(); });
+  $('baseSel').innerHTML = Object.keys(BASES).map(function(k){ return '<option value="' + k + '">' + BASES[k].name + '</option>'; }).join(''); $('baseSel').value = state.ui.base || 'sat';
+  $('baseSel').onchange = function(){ setBase($('baseSel').value); };
+  $('drawLine').onclick = function(){ startDraw('line'); }; $('drawPoly').onclick = function(){ startDraw('poly'); };
+  $('drawUndo').onclick = function(){ if (DR){ DR.pts.pop(); renderDraft(); } };
+  $('drawGps').onclick = function(){ if (!DR) return; if (!S.gps){ startGPS(); toast('Waiting for GPS…'); return; } DR.pts.push([S.gps.lat, S.gps.lon]); renderDraft(); };
+  $('drawAuto').onchange = function(){ if (!DR) return; DR.auto = $('drawAuto').checked; if (DR.auto){ startGPS(); toast('Walk the line. A point is added every ' + (state.set.walkStep || 10) + ' m.'); } renderDraft(); };
+  $('drawCancel').onclick = function(){ if (EDIT) stopEdit(false); else cancelDraw(); };
+  $('drawFinish').onclick = finishDraw; $('drawEditDone').onclick = function(){ stopEdit(true); toast('Shape saved'); };
+  $('mapLocate').onclick = function(){ startGPS(); if (S.gps && MAP.m) MAP.m.setView([S.gps.lat, S.gps.lon], Math.max(MAP.m.getZoom(), 16)); else toast(inViewer ? 'GPS is not passed to pages in the Claude viewer' : 'Waiting for GPS…'); };
+  $('mapFit').onclick = fitData;
+  $('mapShowRd').onchange = renderReadings;
+  $('featList').addEventListener('click', function(e){ var b = e.target.closest('[data-fid]'); if (!b) return; var f = state.features.find(function(x){ return x.id === b.dataset.fid; }); if (!f) return; if (MAP.m) MAP.m.fitBounds(L.latLngBounds(f.coords).pad(0.3), {maxZoom:18}); featureSheet(f); });
+  $('mapOverlay').onclick = overlaySheet;
+  $('mapExGeo').onclick = function(){ saveFile('outcrop_map_' + stamp() + '.json', mapGeoJSON(), 'application/geo+json'); };
+  $('mapExKml').onclick = function(){ saveFile('outcrop_map_' + stamp() + '.kml', mapKML(), 'application/vnd.google-earth.kml+xml'); };
+  $('mapImport').onchange = function(){ var f = $('mapImport').files[0]; if (!f) return; var fr = new FileReader(); fr.onload = function(){ try{ var r = importMapFile(String(fr.result), f.name); toast('Added ' + r.features + ' lines/units' + (r.readings ? ' and ' + r.readings + ' readings' : '')); if (MAP.m) fitData(); }catch(e){ toast('Could not read that file'); } }; fr.readAsText(f); $('mapImport').value = ''; };
+  $('netPng').onclick = function(){ savePng($('net'), 'stereonet'); }; $('rosePng').onclick = function(){ savePng($('rose'), 'rose'); };
+}
+function savePng(cv, nm){ var c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height; var x = c.getContext('2d'); x.fillStyle = cssv('--surface') || '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(cv, 0, 0);
+  c.toBlob(function(b){ if (b) saveFile('outcrop_' + nm + '_' + stamp() + '.png', b, 'image/png'); }, 'image/png'); }
+
+function openRec(e){ var b = e.target.closest('.rec'); if (!b) return; var r = state.recs.find(function(x){ return x.id === b.dataset.id; }); if (r) recordSheet(r); }
+function shrink(file){ return new Promise(function(res){ var img = new Image(), url = URL.createObjectURL(file);
+  img.onload = function(){ var m = 1280, s = Math.min(1, m/Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); c.toBlob(function(b){ res(b || file); }, 'image/jpeg', 0.78); };
+  img.onerror = function(){ res(file); }; img.src = url; }); }
+
+/* hosted copy: offline cache + install */
+if (!window.claude && location.protocol === 'https:' && 'serviceWorker' in navigator){ try{ var l = document.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; document.head.appendChild(l); navigator.serviceWorker.register('sw.js').catch(function(){}); }catch(e){} }
+
+load(); wire(); setNorthLabel(); setMode(state.ui.mode); renderRecent(); showTab(state.ui.tab || 'measure'); drawDial(null);
+if (inViewer || !window.DeviceOrientationEvent){ var b = $('sensorBanner'); b.hidden = false; b.innerHTML = '<b>' + (inViewer ? 'Opened inside the Claude viewer.' : 'No motion sensors here.') + '</b> ' + (inViewer ? 'The viewer does not pass the compass or GPS to pages, so measuring needs the app open in the phone\'s own browser (Settings ▸ Install on your phone). Typing readings, the log, the stereonet and the guide all work here.' : 'Use a phone to measure. Typing readings, the log, the stereonet and the guide all work here.'); }
+if (inViewer){ var mn = $('mapNote'); mn.hidden = false; mn.innerHTML = '<b>Base maps load in the installed app.</b> The Claude viewer blocks map tiles and GPS, so here your lines, units and readings show on a plain background.'; }
+window.__ofb = {GM:GM, state:state, importCSV:importCSV, toCSV:toCSV, analysis:analysis};
+})();
+</script>
+</body></html>
