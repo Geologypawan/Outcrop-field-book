@@ -33,6 +33,8 @@ In the field
     (.jgw/.pgw, pick the coordinate system: MGA2020, MGA94, AMG84/66, UTM, Nepal MUTM,
     or a proj4 string), or a KMZ/KML ground overlay. Reprojected onto the map and kept
     on the phone for offline use; show/hide and see-through slider.
+  * Shapefiles: .zip, or .shp + .dbf + .prj (+ .cpg) chosen together; GeoJSON too.
+    Colour by any field, tap a feature for its attributes.
   * Australia geology and minerals (Geoscience Australia): surface geology 1:1M and
     1:2.5M by rock unit, lithology or age, faults, metamorphic geology, operating mines,
     deposits, identified mineral resources by commodity.
