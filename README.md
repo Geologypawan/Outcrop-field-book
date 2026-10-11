@@ -28,7 +28,15 @@ In the field
   plane). Shows the strike line, structure contours and, with signal, the ground trace
   from a terrain model. Saved planes can be shown or hidden from the list at any time,
   appear on the stereonet, and the trace can be saved as an inferred contact.
-- WA layers (layers button on the map): GSWA bedrock geology 1:100k / 1:500k / 1:2.5M,
+- Layers button on the map:
+  * Your maps: load a georeferenced map as in QField: GeoTIFF, JPG/PNG + world file
+    (.jgw/.pgw, pick the coordinate system: MGA2020, MGA94, AMG84/66, UTM, Nepal MUTM,
+    or a proj4 string), or a KMZ/KML ground overlay. Reprojected onto the map and kept
+    on the phone for offline use; show/hide and see-through slider.
+  * Australia geology and minerals (Geoscience Australia): surface geology 1:1M and
+    1:2.5M by rock unit, lithology or age, faults, metamorphic geology, operating mines,
+    deposits, identified mineral resources by commodity.
+- WA layers (same Layers button): GSWA bedrock geology 1:100k / 1:500k / 1:2.5M,
   structures, Cenozoic geology, regolith, scanned 1:100k and 1:250k map sheets, MINEDEX,
   tenements, open-file drillholes, WAMEX, magnetics, radiometrics, gravity. Tap the map
   to see the unit, deposit or tenement details. Western Australia only; needs signal.

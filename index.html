@@ -837,9 +837,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
 .frow svg{width:34px}
 .drawtools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .mapbtn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mapbtn.wide{width:auto;padding:0 10px;display:flex;gap:5px;font-weight:700;font-size:14px}
+.mapbtn .cnt:empty{display:none}
+.mapbtn .cnt{font:600 12px var(--f-mono)}
+.mapctl.tr select{max-width:150px}
 .walist{display:flex;flex-direction:column;gap:6px}
 .warow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.warow input[type=range]{width:110px;flex:none}
+.warow input[type=range]{width:110px;flex:1 1 90px;max-width:160px}
+.warow label.row{flex-wrap:nowrap;align-items:flex-start;flex:1 1 200px;min-width:min(100%,210px)}
+.warow.mine label.row{flex-basis:100%}
+.warow.mine input[type=range]{margin-left:30px}
+.warow label.row>input{flex:none;margin-top:3px}
+.warow .btn{min-height:34px;padding:4px 10px}
 .waid h4{margin:8px 0 2px;font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.04em;color:#57635d}
 .waid h4:first-child{margin-top:0}
 .waid table{border-collapse:collapse;font-size:12px;margin-top:4px}
@@ -921,7 +930,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <section id="v-map" class="view" hidden>
       <div class="mapwrap">
         <div id="map" aria-label="Field map"></div>
-        <div class="mapctl tr"><select id="baseSel" aria-label="Base map"></select><button class="mapbtn" id="waBtn" type="button" title="WA geology and mining layers" aria-label="WA geology and mining layers"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></button></div>
+        <div class="mapctl tr"><select id="baseSel" aria-label="Base map"></select><button class="mapbtn wide" id="waBtn" type="button" aria-label="Map layers: geology, minerals and your maps"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>Layers<span id="waCount" class="cnt"></span></button></div>
         <div class="mapctl br">
           <button class="mapbtn" id="mapLocate" type="button" title="Show my position" aria-label="Show my position"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
           <button class="mapbtn" id="mapFit" type="button" title="Zoom to my data" aria-label="Zoom to my data"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -947,7 +956,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       <div class="card"><h3 style="margin-bottom:8px">Legend</h3><div class="legend" id="mapLegend"></div></div>
       <div class="row">
-        <button class="btn" id="mapOverlay" type="button">Map images</button>
+        <button class="btn" id="mapOverlay" type="button">Load georeferenced map</button>
         <a class="btn" id="gmLink" href="https://www.google.com/maps" target="_blank" rel="noopener">Open here in Google Maps</a>
         <button class="btn" id="mapExGeo" type="button">Export map (GeoJSON)</button>
         <button class="btn" id="mapExKml" type="button">Export map to Google Earth</button>
@@ -1836,7 +1845,7 @@ function renderMapPanel(){ var used = {}, rows = [];
   $('featList').innerHTML = rows.join('') || '<li class="muted small">No lines or units yet.</li>'; }
 
 /* image overlays (scanned maps) */
-function renderOverlays(){ if (!MAP.m) return; MAP.ovL.clearLayers();
+function renderOverlays(){ if (!MAP.m) return; MAP.ovL.clearLayers(); setTimeout(applyWA, 0);
   state.overlays.forEach(function(o){ if (!o.show) return; PhotoDB.get('ov:' + o.id).then(function(b){ if (!b || !MAP.m) return; var u = URL.createObjectURL(b);
     L.imageOverlay(u, [[o.s, o.w], [o.n, o.e]], {opacity:o.opacity, interactive:false}).addTo(MAP.ovL); }); }); }
 function overlaySheet(){ var b = MAP.m ? MAP.m.getBounds() : null;
@@ -2022,56 +2031,81 @@ function planeFeatures(){ return state.planes.map(function(p){ var a = p.dipdir*
 
 /* ---------- GSWA / DEMIRS map layers (Western Australia, public SLIP services) ---------- */
 var SLIP = 'https://public-services.slip.wa.gov.au/public/rest/services/SLIP_Public_Services/';
-var WA_SVC = {geo:SLIP + 'Geology_and_Soils_Map/MapServer', img:SLIP + 'DMIRS_Imagery_Service/MapServer', min:SLIP + 'Industry_and_Mining/MapServer'};
+var WA_SVC = {ga:'https://services.ga.gov.au/gis/rest/services/GA_Surface_Geology/MapServer', gamr:'https://services.ga.gov.au/gis/rest/services/AustraliasIdentifiedMineralResources/MapServer', gacm:'https://services.ga.gov.au/gis/rest/services/AustralianCriticalMineralsOperatingMinesAndDeposits/MapServer', geo:SLIP + 'Geology_and_Soils_Map/MapServer', img:SLIP + 'DMIRS_Imagery_Service/MapServer', min:SLIP + 'Industry_and_Mining/MapServer'};
 var WA_LAYERS = [
-  {k:'g500', g:'Geology', n:'Bedrock geology 1:500 000', s:'geo', ids:'4'},
-  {k:'g500l', g:'Geology', n:'Structures and faults 1:500 000', s:'geo', ids:'1'},
-  {k:'g100', g:'Geology', n:'Bedrock geology 1:100 000', s:'geo', ids:'21'},
-  {k:'g100l', g:'Geology', n:'Geology lines and structures 1:100 000', s:'geo', ids:'22,23'},
-  {k:'g2m', g:'Geology', n:'Bedrock geology 1:2 500 000', s:'geo', ids:'3,2'},
-  {k:'cz', g:'Geology', n:'Cenozoic geology 1:500 000', s:'geo', ids:'26'},
-  {k:'reg', g:'Geology', n:'Regolith (500 m grid)', s:'geo', ids:'5'},
-  {k:'tec', g:'Geology', n:'Tectonic units 1:500 000', s:'geo', ids:'14'},
-  {k:'dyk', g:'Geology', n:'Dyke suites 1:2 500 000', s:'geo', ids:'25'},
-  {k:'m100', g:'Geology', n:'1:100 000 geological map sheets (scanned)', s:'img', ids:'10'},
-  {k:'m250', g:'Geology', n:'1:250 000 geological map sheets (scanned)', s:'img', ids:'9'},
-  {k:'gch', g:'Geology', n:'Geochronology samples', s:'geo', ids:'13'},
-  {k:'gcm', g:'Geology', n:'Geochemistry samples', s:'geo', ids:'20'},
-  {k:'minedex', g:'Mining', n:'Mines and mineral deposits (MINEDEX)', s:'min', ids:'0'},
-  {k:'ten', g:'Mining', n:'Mining tenements', s:'min', ids:'3'},
-  {k:'dh', g:'Mining', n:'Mineral exploration drillholes (open file)', s:'min', ids:'28'},
-  {k:'core', g:'Mining', n:'Core library drill holes', s:'min', ids:'1'},
-  {k:'wamex', g:'Mining', n:'Exploration reports (WAMEX)', s:'min', ids:'22'},
-  {k:'hist', g:'Mining', n:'Historical exploration activity', s:'min', ids:'35,36,37'},
-  {k:'mf', g:'Mining', n:'Mineral field boundaries', s:'min', ids:'4'},
-  {k:'sheet', g:'Mining', n:'1:100 000 geological map sheet index', s:'min', ids:'39'},
-  {k:'tmi', g:'Geophysics', n:'Magnetics TMI RTP 1VD (40 m)', s:'img', ids:'14'},
-  {k:'tmi80', g:'Geophysics', n:'Magnetics TMI RTP (80 m)', s:'img', ids:'7'},
-  {k:'rad', g:'Geophysics', n:'Radiometrics ternary', s:'img', ids:'4'},
-  {k:'grav', g:'Geophysics', n:'Gravity (400 m)', s:'img', ids:'8'}
+  {k:'au1m', g:'Australia geology', n:'Surface geology 1:1 million (rock units)', s:'ga', ids:'10,9,8,7,6'},
+  {k:'au1mlith', g:'Australia geology', n:'Surface geology 1:1 million (lithology)', s:'ga', ids:'11,8,7'},
+  {k:'au1mage', g:'Australia geology', n:'Surface geology 1:1 million (age)', s:'ga', ids:'12,8,7'},
+  {k:'aufault', g:'Australia geology', n:'Faults 1:1 million', s:'ga', ids:'7'},
+  {k:'au2m', g:'Australia geology', n:'Surface geology 1:2.5 million', s:'ga', ids:'3,2,1,0'},
+  {k:'aumeta', g:'Australia geology', n:'Metamorphic geology 1:5 million', s:'ga', ids:'13'},
+  {k:'aureg', g:'Australia geology', n:'Geological regions', s:'ga', ids:'14'},
+  {k:'aumines', g:'Australia minerals', n:'Operating, developing and care-and-maintenance mines', s:'gacm', ids:'4,5,6'},
+  {k:'audep', g:'Australia minerals', n:'Critical mineral deposits', s:'gacm', ids:'7'},
+  {k:'aimr', g:'Australia minerals', n:'Identified mineral resources (all commodities)', s:'gamr', ids:'30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58'},
+  {k:'auau', g:'Australia minerals', n:'Gold resources', s:'gamr', ids:'38'},
+  {k:'aucu', g:'Australia minerals', n:'Copper resources', s:'gamr', ids:'35'},
+  {k:'auni', g:'Australia minerals', n:'Nickel resources', s:'gamr', ids:'48'},
+  {k:'aufe', g:'Australia minerals', n:'Iron ore resources', s:'gamr', ids:'41'},
+  {k:'auli', g:'Australia minerals', n:'Lithium, tantalum and niobium resources', s:'gamr', ids:'43'},
+  {k:'auree', g:'Australia minerals', n:'Rare earth resources', s:'gamr', ids:'52'},
+  {k:'g500', g:'WA geology', n:'Bedrock geology 1:500 000', s:'geo', ids:'4'},
+  {k:'g500l', g:'WA geology', n:'Structures and faults 1:500 000', s:'geo', ids:'1'},
+  {k:'g100', g:'WA geology', n:'Bedrock geology 1:100 000', s:'geo', ids:'21'},
+  {k:'g100l', g:'WA geology', n:'Geology lines and structures 1:100 000', s:'geo', ids:'22,23'},
+  {k:'g2m', g:'WA geology', n:'Bedrock geology 1:2 500 000', s:'geo', ids:'3,2'},
+  {k:'cz', g:'WA geology', n:'Cenozoic geology 1:500 000', s:'geo', ids:'26'},
+  {k:'reg', g:'WA geology', n:'Regolith (500 m grid)', s:'geo', ids:'5'},
+  {k:'tec', g:'WA geology', n:'Tectonic units 1:500 000', s:'geo', ids:'14'},
+  {k:'dyk', g:'WA geology', n:'Dyke suites 1:2 500 000', s:'geo', ids:'25'},
+  {k:'m100', g:'WA geology', n:'1:100 000 geological map sheets (scanned)', s:'img', ids:'10'},
+  {k:'m250', g:'WA geology', n:'1:250 000 geological map sheets (scanned)', s:'img', ids:'9'},
+  {k:'gch', g:'WA geology', n:'Geochronology samples', s:'geo', ids:'13'},
+  {k:'gcm', g:'WA geology', n:'Geochemistry samples', s:'geo', ids:'20'},
+  {k:'minedex', g:'WA mining', n:'Mines and mineral deposits (MINEDEX)', s:'min', ids:'0'},
+  {k:'ten', g:'WA mining', n:'Mining tenements', s:'min', ids:'3'},
+  {k:'dh', g:'WA mining', n:'Mineral exploration drillholes (open file)', s:'min', ids:'28'},
+  {k:'core', g:'WA mining', n:'Core library drill holes', s:'min', ids:'1'},
+  {k:'wamex', g:'WA mining', n:'Exploration reports (WAMEX)', s:'min', ids:'22'},
+  {k:'hist', g:'WA mining', n:'Historical exploration activity', s:'min', ids:'35,36,37'},
+  {k:'mf', g:'WA mining', n:'Mineral field boundaries', s:'min', ids:'4'},
+  {k:'sheet', g:'WA mining', n:'1:100 000 geological map sheet index', s:'min', ids:'39'},
+  {k:'tmi', g:'WA geophysics', n:'Magnetics TMI RTP 1VD (40 m)', s:'img', ids:'14'},
+  {k:'tmi80', g:'WA geophysics', n:'Magnetics TMI RTP (80 m)', s:'img', ids:'7'},
+  {k:'rad', g:'WA geophysics', n:'Radiometrics ternary', s:'img', ids:'4'},
+  {k:'grav', g:'WA geophysics', n:'Gravity (400 m)', s:'img', ids:'8'}
 ];
-var WA_ATTR = 'GSWA / DEMIRS layers © Government of Western Australia (CC BY 4.0)';
+var WA_ATTR = 'GSWA / DEMIRS layers © Government of Western Australia (CC BY 4.0)', GA_ATTR = 'Geology and mineral layers © Commonwealth of Australia (Geoscience Australia) CC BY 4.0';
+var LAYER_GROUPS = [['Australia geology','Geoscience Australia, whole of Australia'],['Australia minerals','Geoscience Australia, whole of Australia'],['WA geology','Geological Survey of WA, Western Australia only'],['WA mining','DEMIRS, Western Australia only'],['WA geophysics','GSWA, Western Australia only']];
 var waOn = {};
 var WALayer = window.L ? L.TileLayer.extend({ getTileUrl: function(c){ var R = 20037508.342789244, size = 2*R/Math.pow(2, c.z), x0 = -R + c.x*size, y1 = R - c.y*size;
   return this._base + '/export?bbox=' + x0.toFixed(2) + ',' + (y1 - size).toFixed(2) + ',' + (x0 + size).toFixed(2) + ',' + y1.toFixed(2) + '&bboxSR=3857&imageSR=3857&size=256,256&dpi=96&format=png32&transparent=true&layers=show:' + this._ids + '&f=image'; } }) : null;
 function waState(){ state.ui.wa = state.ui.wa || {}; return state.ui.wa; }
 function applyWA(){ if (!MAP.m || !WALayer) return; var st = waState();
   WA_LAYERS.forEach(function(d, i){ var want = st[d.k] && st[d.k].on, have = waOn[d.k];
-    if (want && !have){ var l = new WALayer('', {maxZoom:21, maxNativeZoom:19, tileSize:256, opacity: st[d.k].op || 0.7, attribution:WA_ATTR, zIndex: 10 + (d.g === 'Geophysics' ? 0 : d.g === 'Geology' ? 10 : 20) + i, crossOrigin:false});
+    if (want && !have){ var l = new WALayer('', {maxZoom:21, maxNativeZoom:19, tileSize:256, opacity: st[d.k].op || 0.7, attribution: /^ga/.test(d.s) ? GA_ATTR : WA_ATTR, zIndex: 10 + (d.s === 'img' ? 0 : /mining|minerals/i.test(d.g) ? 80 : 40) + i, crossOrigin:false});
       l._base = WA_SVC[d.s]; l._ids = d.ids; l.addTo(MAP.m); waOn[d.k] = l; }
     else if (!want && have){ MAP.m.removeLayer(have); delete waOn[d.k]; }
     else if (want && have) have.setOpacity(st[d.k].op || 0.7); });
-  var n = Object.keys(waOn).length, b = $('waBtn'); if (b){ b.classList.toggle('on', n > 0); b.title = n ? n + ' WA layer' + (n > 1 ? 's' : '') + ' on' : 'WA geology and mining layers'; } }
-function waSheet(){ var st = waState(), groups = ['Geology', 'Mining', 'Geophysics'];
-  var html = (inViewer ? '<div class="banner"><b>These layers load in the installed app.</b> The Claude viewer blocks outside map services.</div>' : '')
-    + '<p class="small muted" style="margin:0">Public layers from the Geological Survey of Western Australia (Department of Energy, Mines, Industry Regulation and Safety). Western Australia only. Tap the map with a layer on to see what is there.</p>'
-    + groups.map(function(g){ return '<h3>' + g + '</h3><div class="walist">' + WA_LAYERS.filter(function(d){ return d.g === g; }).map(function(d){ var s = st[d.k] || {};
-      return '<div class="warow"><label class="row small" style="flex:1;min-width:0"><input type="checkbox" data-wa="' + d.k + '"' + (s.on ? ' checked' : '') + '> ' + esc(d.n) + '</label><input type="range" min="0.15" max="1" step="0.05" value="' + (s.op || 0.7) + '" data-waop="' + d.k + '" aria-label="See-through for ' + esc(d.n) + '"' + (s.on ? '' : ' hidden') + '></div>'; }).join('') + '</div>'; }).join('')
-    + '<div class="row"><a class="btn" href="' + WA_SVC.geo + '/legend" target="_blank" rel="noopener">Geology legend</a><a class="btn" href="' + WA_SVC.min + '/legend" target="_blank" rel="noopener">Mining legend</a><a class="btn" href="https://www.wa.gov.au/service/natural-resources/mineral-resources/geoview-search-geoscience-and-titles-information" target="_blank" rel="noopener">About GeoVIEW.WA</a></div>'
+  var n = Object.keys(waOn).length + state.overlays.filter(function(o){ return o.show; }).length, b = $('waBtn'); if (b){ b.classList.toggle('on', n > 0); var c = $('waCount'); if (c) c.textContent = n ? String(n) : ''; } }
+function waSheet(){ var st = waState();
+  var mine = state.overlays.map(function(o){ return '<div class="warow mine"><label class="row small"><input type="checkbox" data-ov="' + esc(o.id) + '"' + (o.show ? ' checked' : '') + '><span class="min0">' + esc(o.name) + (o.crs ? '<br><span class="muted">' + esc(o.crs) + '</span>' : '') + '</span></label><input type="range" min="0.15" max="1" step="0.05" value="' + (o.opacity || 0.8) + '" data-ovop="' + esc(o.id) + '" aria-label="See-through for ' + esc(o.name) + '"' + (o.show ? '' : ' hidden') + '><button class="btn" type="button" data-ovzoom="' + esc(o.id) + '">Zoom</button><button class="btn" type="button" data-ovdel="' + esc(o.id) + '">Remove</button></div>'; }).join('');
+  var html = (inViewer ? '<div class="banner"><b>Online layers load in the installed app.</b> The Claude viewer blocks outside map services.</div>' : '')
+    + '<h3>Your maps</h3><div class="walist">' + (mine || '<p class="small muted" style="margin:0">Load a GeoTIFF, an image with a world file, or a KMZ ground overlay, as in QField.</p>') + '</div>'
+    + '<div class="row"><button class="btn primary" type="button" id="waLoad">Load a georeferenced map</button></div>'
+    + LAYER_GROUPS.map(function(G){ return '<h3>' + G[0] + '</h3><p class="small muted" style="margin:-4px 0 0">' + G[1] + '</p><div class="walist">' + WA_LAYERS.filter(function(d){ return d.g === G[0]; }).map(function(d){ var s = st[d.k] || {};
+      return '<div class="warow"><label class="row small"><input type="checkbox" data-wa="' + d.k + '"' + (s.on ? ' checked' : '') + '><span class="min0">' + esc(d.n) + '</span></label><input type="range" min="0.15" max="1" step="0.05" value="' + (s.op || 0.7) + '" data-waop="' + d.k + '" aria-label="See-through for ' + esc(d.n) + '"' + (s.on ? '' : ' hidden') + '></div>'; }).join('') + '</div>'; }).join('')
+    + '<p class="small muted" style="margin:0">Tap the map with a layer on to see the rock unit, deposit or tenement.</p>'
+    + '<div class="row"><a class="btn" href="' + WA_SVC.ga + '/legend" target="_blank" rel="noopener">Australia geology legend</a><a class="btn" href="' + WA_SVC.geo + '/legend" target="_blank" rel="noopener">WA geology legend</a><a class="btn" href="' + WA_SVC.min + '/legend" target="_blank" rel="noopener">WA mining legend</a></div>'
     + '<div class="acts"><button class="btn" id="waOff" type="button">Turn all off</button><button class="btn primary" id="waDone" type="button">Done</button></div>';
-  openSheet('WA geology and mining layers', html, function(){
+  openSheet('Map layers', html, function(){
     document.querySelectorAll('[data-wa]').forEach(function(c){ c.onchange = function(){ var k = c.dataset.wa, s = st[k] = st[k] || {op:0.7}; s.on = c.checked; var r = document.querySelector('[data-waop="' + k + '"]'); if (r) r.hidden = !c.checked; persist(); applyWA(); }; });
     document.querySelectorAll('[data-waop]').forEach(function(r){ r.oninput = function(){ var s = st[r.dataset.waop] = st[r.dataset.waop] || {}; s.op = +r.value; applyWA(); }; r.onchange = persist; });
+    document.querySelectorAll('[data-ov]').forEach(function(c){ c.onchange = function(){ var o = state.overlays.find(function(x){ return x.id === c.dataset.ov; }); if (!o) return; o.show = c.checked; var r = document.querySelector('[data-ovop="' + o.id + '"]'); if (r) r.hidden = !c.checked; persist(); renderOverlays(); applyWA(); }; });
+    document.querySelectorAll('[data-ovop]').forEach(function(r){ r.onchange = function(){ var o = state.overlays.find(function(x){ return x.id === r.dataset.ovop; }); if (!o) return; o.opacity = +r.value; persist(); renderOverlays(); }; });
+    document.querySelectorAll('[data-ovzoom]').forEach(function(b){ b.onclick = function(){ var o = state.overlays.find(function(x){ return x.id === b.dataset.ovzoom; }); if (!o || !MAP.m) return; closeSheet(); if (!o.show){ o.show = true; persist(); renderOverlays(); } MAP.m.fitBounds([[o.s, o.w], [o.n, o.e]]); }; });
+    document.querySelectorAll('[data-ovdel]').forEach(function(b){ b.onclick = function(){ if (!b.dataset.sure){ b.dataset.sure = '1'; b.textContent = 'Tap again'; return; } state.overlays = state.overlays.filter(function(x){ return x.id !== b.dataset.ovdel; }); PhotoDB.del('ov:' + b.dataset.ovdel); persist(); renderOverlays(); applyWA(); closeSheet(); waSheet(); }; });
+    $('waLoad').onclick = function(){ closeSheet(); georefSheet(); };
     $('waOff').onclick = function(){ Object.keys(st).forEach(function(k){ st[k].on = false; }); persist(); applyWA(); closeSheet(); };
     $('waDone').onclick = closeSheet; }); }
 function getJSON(url){ return fetch(url).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); }).catch(function(){ return new Promise(function(res, rej){ var cb = '__jp' + Date.now() + Math.floor(Math.random()*1e5), sc = document.createElement('script'), done = false;
@@ -2088,7 +2122,7 @@ function waIdentify(ll){ var st = waState(), by = {}; WA_LAYERS.forEach(function
       var res = [].concat.apply([], all.filter(Boolean)).slice(0, 6);
       if (!res.length){ pop.setContent('<span class="small">Nothing from the WA layers here. Zoom in or tap closer to a feature.</span>'); return; }
       pop.setContent('<div class="waid">' + res.map(function(r){ var a = r.attributes || {}, rows = Object.keys(a).filter(function(k){ var v = a[k]; return !SKIP_ATTR.test(k) && k !== r.displayFieldName && v != null && v !== '' && v !== 'Null' && String(v).length < 300; }).slice(0, 10);
-        return '<h4>' + esc(String(r.layerName || '').replace(/\s*\(DMIRS-\d+\)/, '')) + '</h4><b>' + esc(a[r.displayFieldName] || r.value || '') + '</b><table>' + rows.map(function(k){ return '<tr><td>' + esc(k) + '</td><td>' + esc(a[k]) + '</td></tr>'; }).join('') + '</table>'; }).join('') + '</div>'); });
+        return '<h4>' + esc(String(r.layerName || '').replace(/\s*\(DMIRS-\d+\)/, '').replace(/^AUS_GA_/, '').replace(/_/g, ' ')) + '</h4><b>' + esc(a[r.displayFieldName] || r.value || '') + '</b><table>' + rows.map(function(k){ return '<tr><td>' + esc(k) + '</td><td>' + esc(a[k]) + '</td></tr>'; }).join('') + '</table>'; }).join('') + '</div>'); });
   return true; }
 
 /* ---------- Google Earth export (KMZ) with strike/dip symbols, as in Rocklogger ---------- */
@@ -2144,6 +2178,148 @@ function exportKMZ(withMap){ var n = exportRecs().filter(function(r){ return r.l
         if (c === 'rejected_extension' || c === 'extension_not_enabled') dl.save({filename:name + '.zip', data:blob}).then(function(){ toast('Saved as .zip. Rename it to end in .kmz, then open it in Google Earth.'); }).catch(function(){}); else toast('Could not save the file'); }); }); return; }
     saveFile(name, blob, 'application/vnd.google-earth.kmz'); }); }
 
+/* ---------- your own georeferenced maps (GeoTIFF, image + world file, KMZ/KML ground overlay) ---------- */
+var LIB = {geotiff:'geotiff.js', proj4:'proj4.js'};
+var libP = {};
+function loadLib(k){ if (k === 'geotiff' && window.GeoTIFF) return Promise.resolve(); if (k === 'proj4' && window.proj4) return Promise.resolve();
+  if (libP[k]) return libP[k]; libP[k] = new Promise(function(res, rej){ var s = document.createElement('script'); s.src = LIB[k]; s.onload = function(){ res(); }; s.onerror = function(){ delete libP[k]; rej(new Error('Could not load ' + k)); }; document.head.appendChild(s); }); return libP[k]; }
+var CRS_LIST = [['auto','From the file'],['4326','WGS 84 latitude/longitude'],['4283','GDA94 latitude/longitude'],['7844','GDA2020 latitude/longitude'],['3857','Web Mercator']]
+  .concat([49,50,51,52,53,54,55,56].map(function(z){ return ['78' + (z + 0), 'MGA2020 zone ' + z]; }))
+  .concat([49,50,51,52,53,54,55,56].map(function(z){ return ['283' + z, 'MGA94 zone ' + z]; }))
+  .concat([49,50,51,52,53,54,55,56].map(function(z){ return ['203' + z, 'AMG84 zone ' + z + ' (AGD84)']; }))
+  .concat([49,50,51,52,53,54,55,56].map(function(z){ return ['202' + z, 'AMG66 zone ' + z + ' (AGD66)']; }))
+  .concat([['utmN','WGS 84 UTM north (type zone)'],['utmS','WGS 84 UTM south (type zone)'],['mutm81','Nepal MUTM 81°E'],['mutm84','Nepal MUTM 84°E'],['mutm87','Nepal MUTM 87°E'],['custom','Other (paste a proj4 string)']]);
+function projFor(code, zone){ code = String(code); var m;
+  if (code === '4326') return '+proj=longlat +datum=WGS84 +no_defs';
+  if (code === '4283') return '+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs';
+  if (code === '7844') return '+proj=longlat +ellps=GRS80 +no_defs';
+  if (code === '3857' || code === '102100' || code === '900913') return '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +no_defs';
+  if ((m = /^78(4[9]|5[0-6])$/.exec(code))) return '+proj=utm +zone=' + m[1] + ' +south +ellps=GRS80 +units=m +no_defs';
+  if ((m = /^283(4[9]|5[0-6])$/.exec(code))) return '+proj=utm +zone=' + m[1] + ' +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs';
+  if ((m = /^203(4[89]|5[0-8])$/.exec(code))) return '+proj=utm +zone=' + m[1] + ' +south +ellps=aust_SA +towgs84=-117.763,-51.51,139.061,0.292,0.443,0.277,-0.191 +units=m +no_defs';
+  if ((m = /^202(4[89]|5[0-8])$/.exec(code))) return '+proj=utm +zone=' + m[1] + ' +south +ellps=aust_SA +towgs84=-117.808,-51.536,137.784,0.303,0.446,0.234,-0.29 +units=m +no_defs';
+  if ((m = /^32([67])(\d\d)$/.exec(code))) return '+proj=utm +zone=' + (+m[2]) + (m[1] === '7' ? ' +south' : '') + ' +datum=WGS84 +units=m +no_defs';
+  if (code === 'utmN' || code === 'utmS') return zone ? '+proj=utm +zone=' + (+zone) + (code === 'utmS' ? ' +south' : '') + ' +datum=WGS84 +units=m +no_defs' : null;
+  if ((m = /^mutm(8[147])$/.exec(code))) return '+proj=tmerc +lat_0=0 +lon_0=' + m[1] + ' +k=0.9999 +x_0=500000 +y_0=0 +a=6377276.345 +rf=300.8017 +towgs84=295,736,257,0,0,0,0 +units=m +no_defs';
+  return null; }
+function projFromEpsgIo(code){ return fetch('https://epsg.io/' + code + '.proj4').then(function(r){ if (!r.ok) throw new Error('epsg'); return r.text(); }).then(function(t){ if (!/\+proj=/.test(t)) throw new Error('epsg'); return t.trim(); }); }
+
+/* affine maps pixel-corner coordinates (u right, v down) to map x,y */
+function applyAff(a, u, v){ return [a[0] + a[1]*u + a[2]*v, a[3] + a[4]*u + a[5]*v]; }
+function invAff(a){ var det = a[1]*a[5] - a[2]*a[4]; return function(x, y){ var dx = x - a[0], dy = y - a[3]; return [(a[5]*dx - a[2]*dy)/det, (-a[4]*dx + a[1]*dy)/det]; }; }
+function worldFileAff(txt){ var v = txt.trim().split(/\s+/).map(Number); if (v.length < 6 || v.some(function(x){ return !isFinite(x); })) return null;
+  var A = v[0], D = v[1], B = v[2], E = v[3], C = v[4], F = v[5]; return [C - A/2 - B/2, A, B, F - D/2 - E/2, D, E]; }
+var R_M = 6378137;
+function toMerc(lon, lat){ var la = GM.clamp(lat, -85, 85)*GM.D; return [R_M*lon*GM.D, R_M*Math.log(Math.tan(Math.PI/4 + la/2))]; }
+function fromMerc(x, y){ return [x/R_M*GM.R2D, (2*Math.atan(Math.exp(y/R_M)) - Math.PI/2)*GM.R2D]; }
+
+/* warp an RGBA raster (w x h, covering pixel-corner space W x H of the affine) into Web Mercator */
+function warpToMerc(px, w, h, W, H, aff, fwd, inv){ var sx = W/w, sy = H/h, ring = [], k, n = 24;
+  for (k=0;k<=n;k++){ ring.push([k/n*W, 0], [k/n*W, H], [0, k/n*H], [W, k/n*H]); }
+  var mx = ring.map(function(p){ var q = applyAff(aff, p[0], p[1]), ll = fwd(q[0], q[1]); return toMerc(ll[0], ll[1]); }).filter(function(p){ return isFinite(p[0]) && isFinite(p[1]); });
+  if (mx.length < 4) throw new Error('The map does not land anywhere on Earth with this coordinate system.');
+  var x0 = Math.min.apply(null, mx.map(function(p){ return p[0]; })), x1 = Math.max.apply(null, mx.map(function(p){ return p[0]; })), y0 = Math.min.apply(null, mx.map(function(p){ return p[1]; })), y1 = Math.max.apply(null, mx.map(function(p){ return p[1]; }));
+  var aspect = (x1 - x0)/(y1 - y0), area = w*h, ow = Math.max(16, Math.round(Math.sqrt(area*aspect))), oh = Math.max(16, Math.round(ow/aspect)), cap = 4096, f = Math.min(1, cap/ow, cap/oh); ow = Math.round(ow*f); oh = Math.round(oh*f);
+  var c = document.createElement('canvas'); c.width = ow; c.height = oh; var ctx = c.getContext('2d'), out = ctx.createImageData(ow, oh), o = out.data, ia = invAff(aff), G = 16;
+  var gw = Math.ceil(ow/G) + 1, gh = Math.ceil(oh/G) + 1, gu = new Float64Array(gw*gh), gv = new Float64Array(gw*gh);
+  for (var gj=0; gj<gh; gj++) for (var gi=0; gi<gw; gi++){ var X = x0 + (gi*G)/ow*(x1 - x0), Y = y1 - (gj*G)/oh*(y1 - y0), ll = fromMerc(X, Y), s = inv(ll[0], ll[1]), uv = s ? ia(s[0], s[1]) : [NaN, NaN]; gu[gj*gw+gi] = uv[0]/sx; gv[gj*gw+gi] = uv[1]/sy; }
+  for (var j=0;j<oh;j++){ var cj = Math.floor(j/G), fj = (j - cj*G)/G;
+    for (var i=0;i<ow;i++){ var ci = Math.floor(i/G), fi = (i - ci*G)/G, a0 = cj*gw + ci, a1 = a0 + 1, a2 = a0 + gw, a3 = a2 + 1;
+      var u = (gu[a0]*(1-fi) + gu[a1]*fi)*(1-fj) + (gu[a2]*(1-fi) + gu[a3]*fi)*fj, v = (gv[a0]*(1-fi) + gv[a1]*fi)*(1-fj) + (gv[a2]*(1-fi) + gv[a3]*fi)*fj;
+      if (!(u >= 0 && v >= 0 && u < w && v < h)) continue; var si = ((v|0)*w + (u|0))*4, di = (j*ow + i)*4; o[di] = px[si]; o[di+1] = px[si+1]; o[di+2] = px[si+2]; o[di+3] = px[si+3]; } }
+  ctx.putImageData(out, 0, 0); var nw = fromMerc(x0, y1), se = fromMerc(x1, y0);
+  return {canvas:c, n:nw[1], w:nw[0], s:se[1], e:se[0]}; }
+function makeProj(def){ if (/longlat/.test(def) && /WGS84|GRS80|towgs84=0,0,0/.test(def)) return {fwd:function(x, y){ return [x, y]; }, inv:function(lo, la){ return [lo, la]; }};
+  var P = proj4(def, 'EPSG:4326'); return {fwd:function(x, y){ try{ return P.forward([x, y]); }catch(e){ return [NaN, NaN]; } }, inv:function(lo, la){ try{ var r = P.inverse([lo, la]); return isFinite(r[0]) ? r : null; }catch(e){ return null; } }}; }
+
+/* read sources */
+function imageToRGBA(blob, maxDim){ return createImageBitmap(blob).then(function(bmp){ var W = bmp.width, H = bmp.height, f = Math.min(1, maxDim/Math.max(W, H)), w = Math.max(1, Math.round(W*f)), h = Math.max(1, Math.round(H*f));
+  var c = document.createElement('canvas'); c.width = w; c.height = h; var x = c.getContext('2d', {willReadFrequently:true}); x.drawImage(bmp, 0, 0, w, h); return {px:x.getImageData(0, 0, w, h).data, w:w, h:h, W:W, H:H}; }); }
+function readGeoTiff(file, maxDim){ return loadLib('geotiff').then(function(){ return GeoTIFF.fromBlob(file); }).then(function(tiff){ return tiff.getImageCount().then(function(cnt){ return tiff.getImage(0).then(function(main){
+  var W = main.getWidth(), H = main.getHeight(), fd = main.fileDirectory, gk = main.getGeoKeys() || {}, aff;
+  if (fd.ModelTransformation){ var t = fd.ModelTransformation; aff = [t[3], t[0], t[1], t[7], t[4], t[5]]; }
+  else { var o = main.getOrigin(), r = main.getResolution(); aff = [o[0], r[0], 0, o[1], 0, r[1]]; }
+  if (gk.GTRasterTypeGeoKey === 2){ aff[0] -= (aff[1] + aff[2])/2; aff[3] -= (aff[4] + aff[5])/2; }
+  var code = gk.ProjectedCSTypeGeoKey && gk.ProjectedCSTypeGeoKey !== 32767 ? gk.ProjectedCSTypeGeoKey : gk.GeographicTypeGeoKey && gk.GeographicTypeGeoKey !== 32767 ? gk.GeographicTypeGeoKey : null;
+  var nodata = fd.GDAL_NODATA != null ? parseFloat(String(fd.GDAL_NODATA).replace(/\0/g, '')) : null, want = Math.min(maxDim, Math.max(W, H)), pick = Promise.resolve(main);
+  if (cnt > 1) pick = Promise.all(Array.apply(null, Array(cnt)).map(function(_, i){ return tiff.getImage(i); })).then(function(ims){ var best = main; ims.forEach(function(im){ var d = Math.max(im.getWidth(), im.getHeight()); if (Math.abs(im.getWidth()/im.getHeight() - W/H) < 0.01 && d >= want && d < Math.max(best.getWidth(), best.getHeight())) best = im; }); return best; });
+  return pick.then(function(im){ var f = Math.min(1, want/Math.max(W, H)), w = Math.max(1, Math.round(W*f)), h = Math.max(1, Math.round(H*f)), spp = im.fileDirectory.SamplesPerPixel || 1, pm = im.fileDirectory.PhotometricInterpretation, bps = (im.fileDirectory.BitsPerSample || [8])[0];
+    var single = spp === 1 && pm !== 3 && (bps > 8 || (im.fileDirectory.SampleFormat || [1])[0] === 3);
+    var rd = single ? im.readRasters({width:w, height:h, samples:[0], interleave:true}).then(function(r){ var vals = []; for (var i=0;i<r.length;i+=Math.max(1, Math.floor(r.length/20000))) if (r[i] !== nodata && isFinite(r[i])) vals.push(r[i]); vals.sort(function(a, b){ return a - b; });
+        var lo = vals[Math.floor(vals.length*0.02)] || 0, hi = vals[Math.floor(vals.length*0.98)] || 1, px = new Uint8ClampedArray(w*h*4);
+        for (i=0;i<r.length;i++){ var g = Math.round(GM.clamp((r[i] - lo)/(hi - lo || 1), 0, 1)*255); px[i*4] = px[i*4+1] = px[i*4+2] = g; px[i*4+3] = (r[i] === nodata || !isFinite(r[i])) ? 0 : 255; } return px; })
+      : im.readRGB({width:w, height:h, interleave:true, enableAlpha:true}).then(function(r){ var ch = r.length/(w*h), px = new Uint8ClampedArray(w*h*4);
+        for (var i=0;i<w*h;i++){ px[i*4] = r[i*ch]; px[i*4+1] = r[i*ch+1]; px[i*4+2] = r[i*ch+2]; var a = ch > 3 ? r[i*ch+3] : 255; if (nodata != null && r[i*ch] === nodata && r[i*ch+1] === nodata && r[i*ch+2] === nodata) a = 0; px[i*4+3] = a; } return px; });
+    return rd.then(function(px){ return {px:px, w:w, h:h, W:W, H:H, aff:aff, code:code}; }); }); }); }); }); }
+function unzip(buf){ var u = new Uint8Array(buf), dv = new DataView(buf), e = -1; for (var i = u.length - 22; i >= Math.max(0, u.length - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50){ e = i; break; }
+  if (e < 0) return Promise.reject(new Error('Not a zip file')); var n = dv.getUint16(e + 10, true), p = dv.getUint32(e + 16, true), list = [];
+  for (var k=0;k<n;k++){ var meth = dv.getUint16(p + 10, true), cs = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lo = dv.getUint32(p + 42, true), name = new TextDecoder().decode(u.subarray(p + 46, p + 46 + nl));
+    var start = lo + 30 + dv.getUint16(lo + 26, true) + dv.getUint16(lo + 28, true); list.push({name:name, meth:meth, data:u.subarray(start, start + cs)}); p += 46 + nl + xl + cl; }
+  return Promise.all(list.map(function(f){ if (f.meth === 0) return Promise.resolve([f.name, new Blob([f.data])]);
+    if (f.meth !== 8 || typeof DecompressionStream === 'undefined') return Promise.resolve([f.name, null]);
+    return new Response(new Blob([f.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob().then(function(b){ return [f.name, b]; }); }))
+    .then(function(r){ var o = {}; r.forEach(function(x){ if (x[1]) o[x[0]] = x[1]; }); return o; }); }
+function groundOverlays(kmlText){ var doc = new DOMParser().parseFromString(kmlText, 'application/xml');
+  return Array.prototype.map.call(doc.getElementsByTagName('GroundOverlay'), function(g){ function t(tag, el){ var x = (el || g).getElementsByTagName(tag)[0]; return x ? x.textContent.trim() : ''; }
+    var box = g.getElementsByTagName('LatLonBox')[0]; if (!box) return null;
+    return {name:t('name') || 'Ground overlay', href:t('href'), n:+t('north', box), s:+t('south', box), e:+t('east', box), w:+t('west', box), rot:+(t('rotation', box) || 0)}; }).filter(Boolean); }
+
+/* loader sheet */
+function georefSheet(){ var html = (inViewer ? '<div class="banner"><b>Loading maps works best in the installed app.</b> Here the helper code may not load.</div>' : '')
+  + '<p class="small muted" style="margin:0">Load a map that already has coordinates, as in QField: a <b>GeoTIFF</b> (.tif), a <b>JPG/PNG/TIF with its world file</b> (.jgw, .pgw, .tfw, .wld; choose both files together), or a <b>KMZ/KML ground overlay</b> from Google Earth. The map is fitted to the satellite view and kept on the phone for offline use.</p>'
+  + '<label class="btn primary" for="grFile" style="cursor:pointer">Choose map file(s)</label><input type="file" id="grFile" multiple accept=".tif,.tiff,.jpg,.jpeg,.png,.jgw,.pgw,.tfw,.wld,.jpw,.pngw,.tifw,.kmz,.kml,image/*" hidden>'
+  + '<p class="small" id="grFiles" style="margin:0"></p>'
+  + '<div class="grid2"><label class="f">Coordinate system<select id="grCrs">' + CRS_LIST.map(function(c){ return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('') + '</select></label><label class="f" id="grZoneWrap" hidden>UTM zone<input type="number" id="grZone" min="1" max="60" value="51"></label></div>'
+  + '<label class="f" id="grCustomWrap" hidden>proj4 string<input type="text" id="grCustom" placeholder="+proj=utm +zone=51 +south +ellps=GRS80 +units=m +no_defs" autocomplete="off"></label>'
+  + '<div class="grid2"><label class="f">Detail<select id="grMax"><option value="2048">Standard (fast)</option><option value="3072" selected>High</option><option value="4096">Highest (large files)</option></select></label><label class="f">See-through<input type="range" id="grOp" min="0.2" max="1" step="0.05" value="0.8"></label></div>'
+  + '<p class="small muted" id="grStatus" style="margin:0">GeoTIFFs usually carry their coordinate system; leave it on "From the file". Choose one for world-file images, e.g. MGA2020 zone 51 for Kalgoorlie.</p>'
+  + '<div class="acts"><button class="btn" id="grCorners" type="button">Place an image by its corners instead</button><button class="btn" id="grClose" type="button">Close</button><button class="btn primary" id="grGo" type="button" disabled>Add to map</button></div>';
+  openSheet('Load a georeferenced map', html, function(){ var files = [];
+    function sync(){ var v = $('grCrs').value; $('grZoneWrap').hidden = !/^utm/.test(v); $('grCustomWrap').hidden = v !== 'custom'; }
+    $('grCrs').onchange = sync; sync();
+    $('grFile').onchange = function(){ files = Array.prototype.slice.call($('grFile').files); $('grFiles').textContent = files.map(function(f){ return f.name + ' (' + (f.size/1048576).toFixed(1) + ' MB)'; }).join(' · '); $('grGo').disabled = !files.length;
+      if (files.some(function(f){ return /\.(jgw|pgw|tfw|wld|jpw|pngw|tifw)$/i.test(f.name); }) && $('grCrs').value === 'auto'){ $('grCrs').value = '7851'; sync(); $('grStatus').textContent = 'World files do not say which coordinate system they use. Check it is right (MGA2020 zone 51 picked).'; } };
+    $('grClose').onclick = closeSheet; $('grCorners').onclick = function(){ closeSheet(); overlaySheet(); };
+    $('grGo').onclick = function(){ var st = $('grStatus'), btn = $('grGo'); btn.disabled = true; st.textContent = 'Reading the map…';
+      importGeoref(files, {crs:$('grCrs').value, zone:$('grZone').value, custom:$('grCustom').value.trim(), max:+$('grMax').value, opacity:+$('grOp').value}, function(m){ st.textContent = m; })
+        .then(function(n){ closeSheet(); toast(n === 1 ? 'Map added' : n + ' maps added'); })
+        .catch(function(e){ st.textContent = (e && e.message) || 'Could not read that map.'; btn.disabled = false; }); }; }); }
+function resolveProj(opt, fileCode){ var pick = opt.crs;
+  if (pick === 'custom'){ if (!/\+proj=/.test(opt.custom)) return Promise.reject(new Error('Paste a proj4 string that starts with +proj=')); return Promise.resolve(opt.custom); }
+  if (pick !== 'auto'){ var d = projFor(pick, opt.zone); return d ? Promise.resolve(d) : Promise.reject(new Error('Type the UTM zone')); }
+  if (!fileCode) return Promise.reject(new Error('The file does not say its coordinate system. Choose it from the list.'));
+  var d2 = projFor(fileCode); if (d2) return Promise.resolve(d2);
+  return projFromEpsgIo(fileCode).catch(function(){ throw new Error('The file uses EPSG:' + fileCode + ', which the app does not know offline. Choose "Other" and paste its proj4 string (from epsg.io).'); }); }
+function crsName(c){ var f = CRS_LIST.find(function(x){ return x[0] === String(c); }); return f ? f[1] : (/^\d+$/.test(String(c)) ? 'EPSG:' + c : String(c)); }
+function saveOverlay(name, warped, opt, crsLabel){ crsLabel = crsName(crsLabel); return new Promise(function(res){ warped.canvas.toBlob(function(b){ var o = {id:uid(), name:name, n:warped.n, s:warped.s, e:warped.e, w:warped.w, opacity:opt.opacity || 0.8, show:true, kind:'georef', crs:crsLabel, t:new Date().toISOString()};
+  PhotoDB.put('ov:' + o.id, b).then(function(){ state.overlays.push(o); persist(); renderOverlays(); if (MAP.m) MAP.m.fitBounds([[o.s, o.w], [o.n, o.e]]); res(o); }); }, 'image/png'); }); }
+function importGeoref(files, opt, say){ var byExt = function(re){ return files.filter(function(f){ return re.test(f.name); }); };
+  var tifs = byExt(/\.tiff?$/i), worlds = byExt(/\.(jgw|pgw|tfw|wld|jpw|pngw|tifw)$/i), imgs = byExt(/\.(jpe?g|png)$/i), kmls = byExt(/\.km[lz]$/i), jobs = [];
+  var showMap = function(){ if (state.ui.tab !== 'map') showTab('map'); };
+  function base(n){ return n.replace(/\.[^.]+$/, '').toLowerCase(); }
+  function worldFor(f){ return worlds.find(function(w){ return base(w.name) === base(f.name); }) || (worlds.length === 1 && (imgs.length + tifs.length) === 1 ? worlds[0] : null); }
+  var chain = Promise.resolve(0);
+  tifs.forEach(function(f){ chain = chain.then(function(n){ say('Reading ' + f.name + '…'); var wf = worldFor(f);
+    return readGeoTiff(f, opt.max).then(function(r){ var affP = wf ? wf.text().then(function(t){ var a = worldFileAff(t); if (!a) throw new Error('Could not read ' + wf.name); return a; }) : Promise.resolve(r.aff);
+      return affP.then(function(aff){ if (!aff || !isFinite(aff[1]) || aff[1] === 0) throw new Error(f.name + ' has no georeferencing. Choose its world file too.');
+        return resolveProj(opt, r.code).then(function(def){ return loadLib('proj4').then(function(){ say('Fitting ' + f.name + ' to the map…'); var P = makeProj(def);
+          return saveOverlay(f.name, warpToMerc(r.px, r.w, r.h, r.W, r.H, aff, P.fwd, P.inv), opt, opt.crs === 'auto' ? (r.code || 'From the file') : opt.crs); }); }); }); }).then(function(){ showMap(); return n + 1; }); }); });
+  imgs.forEach(function(f){ chain = chain.then(function(n){ var wf = worldFor(f); if (!wf) throw new Error('Choose the world file for ' + f.name + ' (for example ' + f.name.replace(/\.[^.]+$/, '') + '.jgw) together with the image, or use "Place an image by its corners".');
+    say('Reading ' + f.name + '…'); return Promise.all([imageToRGBA(f, opt.max), wf.text()]).then(function(r){ var aff = worldFileAff(r[1]); if (!aff) throw new Error('Could not read ' + wf.name);
+      return resolveProj(opt, null).then(function(def){ return loadLib('proj4').then(function(){ var P = makeProj(def); say('Fitting ' + f.name + ' to the map…');
+        return saveOverlay(f.name, warpToMerc(r[0].px, r[0].w, r[0].h, r[0].W, r[0].H, aff, P.fwd, P.inv), opt, opt.crs); }); }); }).then(function(){ showMap(); return n + 1; }); }); });
+  kmls.forEach(function(f){ chain = chain.then(function(n){ say('Reading ' + f.name + '…');
+    var getFiles = /\.kmz$/i.test(f.name) ? f.arrayBuffer().then(unzip) : f.text().then(function(t){ var o = {}; o['doc.kml'] = new Blob([t]); files.forEach(function(x){ o[x.name] = x; }); return o; });
+    return getFiles.then(function(z){ var kmlName = Object.keys(z).find(function(k){ return /\.kml$/i.test(k); }); if (!kmlName) throw new Error('No KML inside ' + f.name);
+      return z[kmlName].text().then(function(t){ var gos = groundOverlays(t); if (!gos.length) throw new Error(f.name + ' has no ground overlay (image) in it. Use Map ▸ Import KML / GeoJSON for lines and points.');
+        return gos.reduce(function(p, g){ return p.then(function(k){ var key = Object.keys(z).find(function(x){ return x === g.href || x.endsWith('/' + g.href) || g.href.endsWith(x); }); if (!key) throw new Error('The image ' + g.href + ' is not inside ' + f.name + '. Choose it together with the KML.');
+            return imageToRGBA(z[key], opt.max).then(function(r){ var cx = (g.e + g.w)/2, cy = (g.n + g.s)/2, th = (g.rot || 0)*GM.D, cs = Math.cos(th), sn = Math.sin(th), sx = (g.e - g.w)/r.W, sy = (g.n - g.s)/r.H;
+              var aff = [cx + (-(g.e - g.w)/2)*cs - ((g.n - g.s)/2)*sn, sx*cs, sy*sn, cy + (-(g.e - g.w)/2)*sn + ((g.n - g.s)/2)*cs, sx*sn, -sy*cs];
+              var id = {fwd:function(x, y){ return [x, y]; }, inv:function(lo, la){ return [lo, la]; }};
+              return saveOverlay(g.name, warpToMerc(r.px, r.w, r.h, r.W, r.H, aff, id.fwd, id.inv), opt, 'Google Earth overlay'); }).then(function(){ return k + 1; }); }); }, Promise.resolve(n)); }); }).then(function(k){ showMap(); return k; }); }); });
+  if (!tifs.length && !imgs.length && !kmls.length) return Promise.reject(new Error('Choose a .tif, a .jpg/.png with its world file, or a .kmz/.kml.'));
+  return chain; }
+
 /* ---------- guide ---------- */
 var GUIDE = [
  {h:'Measuring with the phone', b:'<p>Plane: lay the back of the phone flat on the surface, any way round, and hold still until the bar turns green. Line: lay the long edge of the phone along the lineation, top end pointing down the plunge or up it (either works). Plane + line: measure the plane first, then the line on it; the app works out the rake and how far the line sits off the plane.</p><ul><li>Calibrate the compass at the start of each day and whenever readings jump: move the phone in a figure-of-eight, away from the hammer, vehicles, fences and magnetite-rich rock.</li><li>Check the phone against an analogue compass on a known bearing each day and note the difference.</li><li>Take several readings of each surface. Phone azimuths scatter more than a good analogue compass. In a test of about 350 paired readings, Steiner (2018) found a median difference of 13° and advised extra care with dips steeper than about 40°.</li><li>Dip comes from the accelerometer and is usually better than the dip direction, which comes from the magnetometer.</li><li>On rough or small surfaces, rest the phone on a notebook or clipboard laid on the surface. That also stops the camera bump tilting the phone.</li><li>Allmendinger et al. (2017) recommend redundancy: repeat readings, compare devices and keep an analogue check.</li></ul>'},
@@ -2158,7 +2334,7 @@ var GUIDE = [
  {h:'Rock strength in the field (ISRM)', b:'<div class="tablewrap"><table class="gt"><tr><th>Grade</th><th>UCS (MPa)</th><th>Field test</th></tr><tr><td>R6 Extremely strong</td><td class="n">&gt;250</td><td>Hammer only chips it</td></tr><tr><td>R5 Very strong</td><td class="n">100–250</td><td>Needs many hammer blows to break</td></tr><tr><td>R4 Strong</td><td class="n">50–100</td><td>Needs more than one blow to break</td></tr><tr><td>R3 Medium strong</td><td class="n">25–50</td><td>Knife cannot scrape it; one firm blow breaks it</td></tr><tr><td>R2 Weak</td><td class="n">5–25</td><td>Knife peels it with difficulty; hammer point dents it</td></tr><tr><td>R1 Very weak</td><td class="n">1–5</td><td>Crumbles under firm hammer-point blows; knife peels it</td></tr><tr><td>R0 Extremely weak</td><td class="n">0.25–1</td><td>Thumbnail dents it</td></tr></table></div><p>After the field estimates tabulated by Hoek et al. (1998).</p>'},
  {h:'Weathering grades', b:'<div class="tablewrap"><table class="gt"><tr><th>Grade</th><th>Description</th></tr><tr><td>I Fresh</td><td>No visible weathering; slight discolouration on main joints at most</td></tr><tr><td>II Slightly</td><td>Discolouration of the rock and joint surfaces</td></tr><tr><td>III Moderately</td><td>Less than half the rock decomposed to soil; fresh or discoloured core stones</td></tr><tr><td>IV Highly</td><td>More than half decomposed to soil</td></tr><tr><td>V Completely</td><td>All decomposed to soil; original fabric still visible</td></tr><tr><td>VI Residual soil</td><td>Fabric destroyed</td></tr></table></div>'},
  {h:'Mapping contacts and units', b:'<ul><li>Draw a line with <b>Map ▸ Draw contact or fault</b>: tap along it, or tick <b>Walk it</b> and walk the contact so a point is added every 10 m from GPS.</li><li>Line symbols follow common map practice: solid where observed, long dashes where approximate, short dashes where inferred, dots where concealed. Faults are red; thrust teeth and normal-fault ticks go on the hanging wall or downthrown side.</li><li>Draw rock units as areas. Points snap to nearby line points, so units can share the contacts you have drawn.</li><li>Draw an <b>Area to study</b> around an outcrop or domain and open its stereonet to see only the readings inside it.</li><li><b>Rule of Vs</b>: where a contact crosses a valley, it Vs upstream if it dips upstream or dips downstream more gently than the valley floor; it Vs downstream if it dips downstream more steeply than the valley floor; a vertical contact runs straight across.</li><li>A contact\'s trace on the map should follow the strike measured nearby on flat ground. Where it does not, check the dip and the topography.</li></ul>'},
- {h:'WA geology and mining layers', b:'<ul><li>Tap the layers button at the top of the map to turn on Geological Survey of WA layers: bedrock geology at 1:100 000, 1:500 000 and 1:2.5 million, structures, Cenozoic geology, regolith, the scanned 1:100 000 and 1:250 000 map sheets, MINEDEX mines and deposits, tenements, open-file drillholes, WAMEX reports, magnetics, radiometrics and gravity.</li><li>Tap the map with a layer on to see the unit name, code and description, or the deposit, tenement or drillhole details.</li><li>The layers cover Western Australia only and need signal. Areas you have looked at are kept for offline use.</li><li>Source: Department of Energy, Mines, Industry Regulation and Safety (GSWA) through the SLIP public map services, CC BY 4.0.</li></ul>'},
+ {h:'Map layers and your own maps', b:'<ul><li>Tap <b>Layers</b> at the top of the map. <b>Australia geology</b> and <b>Australia minerals</b> come from Geoscience Australia and cover the whole country: surface geology at 1:1 million and 1:2.5 million (by rock unit, lithology or age), faults, metamorphic geology, operating mines and deposits, and identified mineral resources by commodity.</li><li><b>Your maps</b>: load a georeferenced map as in QField. A GeoTIFF carries its own coordinates; a JPG or PNG needs its world file (.jgw/.pgw) chosen together with it and the coordinate system picked (MGA2020, MGA94, AMG, UTM, Nepal MUTM or a proj4 string). KMZ ground overlays from Google Earth work too. The map is reprojected onto the satellite view and kept on the phone for offline use. Untick it to hide it, or use the slider to see through it.</li><li>WA layers: Geological Survey of WA layers: bedrock geology at 1:100 000, 1:500 000 and 1:2.5 million, structures, Cenozoic geology, regolith, the scanned 1:100 000 and 1:250 000 map sheets, MINEDEX mines and deposits, tenements, open-file drillholes, WAMEX reports, magnetics, radiometrics and gravity.</li><li>Tap the map with a layer on to see the unit name, code and description, or the deposit, tenement or drillhole details.</li><li>The layers cover Western Australia only and need signal. Areas you have looked at are kept for offline use.</li><li>Source: Department of Energy, Mines, Industry Regulation and Safety (GSWA) through the SLIP public map services, CC BY 4.0.</li></ul>'},
  {h:'Projecting a plane', b:'<ul><li>Open a plane reading and tap <b>Project on map</b>, or tap <b>Map ▸ Project a plane</b> and type an attitude. Save it to keep it; tick or untick it in <b>Projected planes</b> to show or hide it.</li><li><b>Strike line</b>: the solid line through the reading. <b>Structure contours</b>: dashed lines where the plane is 10 m (or your interval) lower or higher. Their spacing is the interval divided by tan(dip), so steep planes have close contours.</li><li><b>Ground trace</b>: with signal, the app loads a terrain model (mostly SRTM, about 30 m cells) and draws where the plane meets the ground. Use it to look for the same contact elsewhere and to check the rule of Vs.</li><li>A real contact is rarely a perfect plane. Treat the trace as a prediction; <b>Save trace as a contact</b> adds it as an inferred contact you can reshape in the field.</li></ul>'},
  {h:'Folds, faults and shear sense', b:'<ul><li><b>Interlimb angle</b> (Fleuty 1964): gentle 180–120°, open 120–70°, close 70–30°, tight 30–0°, isoclinal 0°.</li><li><b>Plunge</b>: sub-horizontal &lt;10°, gently 10–30°, moderately 30–60°, steeply 60–80°, sub-vertical &gt;80°.</li><li><b>On the net</b>: bedding poles around a fold fall on a great circle (π girdle); its pole is the fold axis. The intersection of the two limb planes (β) should agree with it and with measured hinge lines.</li><li><b>Parasitic folds</b> (Pumpelly\'s rule): Z folds on the left limb and S folds on the right limb of a synform, looking down the plunge; M folds near the hinge.</li><li><b>Shear sense</b>: S–C fabrics, σ and δ porphyroclasts, shear bands, mica fish, asymmetric folds, offset markers. Use slickenline steps only where accretion steps are clear.</li><li>Record fault planes with their slickenlines (Plane + line) so rake and sense can be read later.</li></ul>'},
  {h:'Outcrop description checklist', b:'<ul><li>Station, position and accuracy, photo with scale and north arrow</li><li>Exposure: in situ, subcrop or float; size</li><li>Rock name, fresh and weathered colour, grain size, texture, minerals with estimated %</li><li>Strength (R0–R6) and weathering (I–VI)</li><li>Fabric and structures: bedding, foliation, joints (spacing, aperture, infill), veins, faults</li><li>Alteration and mineralisation: style, minerals, intensity</li><li>Samples: ID, type, bag number, what it is for</li><li>Relationships: contacts, cross-cutting order, way-up</li></ul>'},
@@ -2229,7 +2405,7 @@ function wire(){
   $('mapFit').onclick = fitData;
   $('mapShowRd').onchange = renderReadings;
   $('featList').addEventListener('click', function(e){ var b = e.target.closest('[data-fid]'); if (!b) return; var f = state.features.find(function(x){ return x.id === b.dataset.fid; }); if (!f) return; if (MAP.m) MAP.m.fitBounds(L.latLngBounds(f.coords).pad(0.3), {maxZoom:18}); featureSheet(f); });
-  $('mapOverlay').onclick = overlaySheet;
+  $('mapOverlay').onclick = georefSheet;
   $('planeNew').onclick = function(){ var last = state.recs.slice().reverse().find(function(r){ return r.dip != null && r.lat != null && r.src !== 'example'; }); planeSheet(newPlaneFrom(last || null), true); };
   $('planeList').addEventListener('click', function(e){ var b = e.target.closest('[data-pid]'); if (!b) return; var p = planeById(b.dataset.pid); if (p){ zoomPlane(p); planeSheet(p); } });
   $('planeList').addEventListener('change', function(e){ var c = e.target.closest('[data-pshow]'); if (!c) return; var p = planeById(c.dataset.pshow); if (!p) return; p.show = c.checked; persist(); renderPlanes(); if (p.show){ zoomPlane(p); if (!p.trace) computeTrace(p, true); } });

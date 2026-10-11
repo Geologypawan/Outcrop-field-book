@@ -1,14 +1,14 @@
 // Outcrop Field Book: works offline after the first visit.
 // App files: network first (so updates arrive at once), cache when offline.
 // Map and terrain tiles: cache first, kept for offline use.
-const APP = 'outcrop-app-v4', TILES = 'outcrop-tiles-v1', MAX_TILES = 5000;
-const FILES = ['./', './index.html', './leaflet.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const APP = 'outcrop-app-v5', TILES = 'outcrop-tiles-v1', MAX_TILES = 5000;
+const FILES = ['./', './index.html', './leaflet.js', './geotiff.js', './proj4.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const TILE_HOSTS = /(^|\.)(tile\.openstreetmap\.org|tile\.opentopomap\.org|server\.arcgisonline\.com)$/;
 self.addEventListener('install', e => { e.waitUntil(caches.open(APP).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== APP && k !== TILES).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 let added = 0;
 async function trim(){ const c = await caches.open(TILES), keys = await c.keys(); for (let i = 0; i < keys.length - MAX_TILES; i++) await c.delete(keys[i]); }
-function isTile(url){ return TILE_HOSTS.test(url.hostname) || (url.hostname === 's3.amazonaws.com' && url.pathname.startsWith('/elevation-tiles-prod/')) || (url.hostname === 'public-services.slip.wa.gov.au' && url.pathname.endsWith('/MapServer/export')); }
+function isTile(url){ return TILE_HOSTS.test(url.hostname) || (url.hostname === 's3.amazonaws.com' && url.pathname.startsWith('/elevation-tiles-prod/')) || ((url.hostname === 'public-services.slip.wa.gov.au' || url.hostname === 'services.ga.gov.au') && url.pathname.endsWith('/MapServer/export')); }
 self.addEventListener('fetch', e => {
   const req = e.request; if (req.method !== 'GET') return;
   const url = new URL(req.url);
