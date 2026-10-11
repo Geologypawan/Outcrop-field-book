@@ -1,7 +1,7 @@
 // Outcrop Field Book: works offline after the first visit.
 // App files: network first (so updates arrive at once), cache when offline.
 // Map and terrain tiles: cache first, kept for offline use.
-const APP = 'outcrop-app-v7', TILES = 'outcrop-tiles-v1', MAX_TILES = 5000;
+const APP = 'outcrop-app-v8', TILES = 'outcrop-tiles-v1', MAX_TILES = 5000;
 const FILES = ['./', './index.html', './leaflet.js', './geotiff.js', './proj4.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const TILE_HOSTS = /(^|\.)(tile\.openstreetmap\.org|tile\.opentopomap\.org|server\.arcgisonline\.com)$/;
 self.addEventListener('install', e => { e.waitUntil(caches.open(APP).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });

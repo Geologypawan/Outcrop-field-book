@@ -1247,6 +1247,21 @@ var PLANES = ['Bedding','Foliation','Cleavage','Joint','Fault','Vein','Shear zon
 var LINES = ['Lineation','Fold axis','Slickenline','Intersection','Mineral lineation','Stretching lineation'];
 var ROCKS = ['Sandstone','Siltstone','Mudstone','Shale','Conglomerate','Limestone','Dolomite','Chert','BIF','Quartzite','Slate','Phyllite','Schist','Gneiss','Marble','Amphibolite','Greenstone','Granite','Granodiorite','Diorite','Gabbro','Dolerite','Basalt','Andesite','Rhyolite','Komatiite','Peridotite','Serpentinite','Tuff','Diamictite'];
 var inViewer = !!(window.claude && typeof window.claude.use === 'function');
+var APP_VERSION = '1.8 · 11 Oct 2026';
+function checkUpdate(btn, quiet){ var out = $('updOut');
+  function say(t){ if (out) out.textContent = t; else if (!quiet) toast(t); }
+  if (inViewer){ say('This copy inside Claude updates when Claude publishes a new version. The installed app has its own update check.'); return; }
+  if (!navigator.onLine){ say('No signal. Connect and try again; your readings are safe either way.'); return; }
+  if (btn){ btn.disabled = true; btn.textContent = 'Checking…'; }
+  fetch('index.html?check=' + Date.now(), {cache:'no-store'}).then(function(r){ if (!r.ok) throw new Error(r.status); return r.text(); }).then(function(t){
+    var m = /var APP_VERSION = '([^']+)'/.exec(t), latest = m ? m[1] : null;
+    if (!latest){ throw new Error('version'); }
+    if (latest === APP_VERSION){ say('You have the latest version (' + APP_VERSION + ').'); if (btn){ btn.disabled = false; btn.textContent = 'Check for updates'; } return; }
+    say('Updating to ' + latest + '… your readings and maps are kept.');
+    var reg = navigator.serviceWorker ? navigator.serviceWorker.getRegistration().then(function(r){ return r && r.update(); }).catch(function(){}) : Promise.resolve();
+    reg.then(function(){ return window.caches ? caches.keys().then(function(ks){ return Promise.all(ks.filter(function(k){ return /^outcrop-app/.test(k); }).map(function(k){ return caches.delete(k); })); }) : null; })
+      .then(function(){ setTimeout(function(){ location.reload(); }, 600); }); })
+  .catch(function(){ say('Could not reach the update server. Try again with better signal.'); if (btn){ btn.disabled = false; btn.textContent = 'Check for updates'; } }); }
 var dlCap = inViewer ? window.claude.use('downloads').catch(function(){ return null; }) : Promise.resolve(null);
 
 /* ---------- state ---------- */
@@ -1504,8 +1519,9 @@ function settingsSheet(){ var s = state.set;
    + '<div class="grid2"><label class="f">Average over (s)<input type="number" id="sWin" min="0.3" max="5" step="0.1" value="' + s.win + '"></label><label class="f">Hold steady for (s) before auto-record<input type="number" id="sHold" min="0.5" max="10" step="0.5" value="' + s.hold + '"></label></div>'
    + '<label class="f">Walk-it spacing (m)<input type="number" id="sWalk" min="2" max="200" step="1" value="' + (s.walkStep || 10) + '"></label>'
    + '<details class="tool"><summary>Install on your phone</summary><div class="in small"><p style="margin:0">The compass and GPS need the app open in the phone\'s own browser. Put the app folder (index.html, sw.js, manifest.webmanifest, icon) on any https host, for example GitHub Pages or Netlify Drop, open the link in Chrome (Android) or Safari (iPhone), then choose <b>Add to Home screen</b>. After the first visit it works offline. Readings stay on the phone, so export a backup after each day.</p></div></details>'
+   + '<h3>App</h3><div class="row-between"><span class="small">Version <b class="mono">' + APP_VERSION + '</b></span><button class="btn primary" id="sUpd" type="button">Check for updates</button></div><p class="small muted" id="updOut" style="margin:0">The app also updates by itself when you open it with signal. Updating never removes your readings, maps or photos.</p>'
    + '<div class="acts"><button class="btn" id="sClose" type="button">Close</button><button class="btn primary" id="sSave" type="button">Save</button></div>';
-  openSheet('Settings', html, function(){ $('sNorth').value = s.north; $('sProj').value = s.proj; $('sClose').onclick = closeSheet;
+  openSheet('Settings', html, function(){ $('sNorth').value = s.north; $('sProj').value = s.proj; $('sClose').onclick = closeSheet; $('sUpd').onclick = function(){ checkUpdate($('sUpd')); };
     $('sSave').onclick = function(){ s.north = $('sNorth').value; s.decl = parseFloat($('sDecl').value) || 0; s.proj = $('sProj').value; s.offE = parseFloat($('sOffE').value) || 0; s.offN = parseFloat($('sOffN').value) || 0;
       s.win = GM.clamp(parseFloat($('sWin').value) || 1, 0.3, 5); s.hold = GM.clamp(parseFloat($('sHold').value) || 2, 0.5, 10); s.walkStep = GM.clamp(parseFloat($('sWalk').value) || 10, 2, 200); persist(); setNorthLabel(); closeSheet(); refreshAll(); toast('Settings saved'); }; }); }
 
