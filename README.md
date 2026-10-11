@@ -24,6 +24,10 @@ In the field
   as strike/dip symbols; draw contacts, faults, thrusts, fold traces and rock units;
   "Walk it" adds a GPS point every 10 m as you walk a contact; add scanned maps as
   image overlays; "Open here in Google Maps".
+- Projected planes: open a plane reading and tap "Project on map" (or Map > Project a
+  plane). Shows the strike line, structure contours and, with signal, the ground trace
+  from a terrain model. Saved planes can be shown or hidden from the list at any time,
+  appear on the stereonet, and the trace can be saved as an inferred contact.
 - Interpret: stereonet, density, sets, fold axis, rose; an area drawn on the map can
   be opened as its own stereonet.
 - Readings and map work stay on the phone. Use Log > Backup at the end of each day.

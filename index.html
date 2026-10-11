@@ -80,6 +80,14 @@ a.btn{text-decoration:none;color:var(--ink)}
 .instrument{display:grid;grid-template-columns:minmax(0,220px) 1fr;gap:16px;align-items:center}
 @media (max-width:460px){.instrument{grid-template-columns:1fr}}
 .dialwrap{width:100%;max-width:220px;aspect-ratio:1;margin:0 auto}
+@media (max-width:460px){.dialwrap{max-width:180px}.readout .big{font-size:56px}}
+.recrow{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.recrow #btnRecord{flex:1 1 200px}
+#btnRecord.steady{box-shadow:0 0 0 3px var(--good)}
+.plab span{display:inline-block;transform:translate(4px,-50%);font:600 12px var(--f-mono);white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}
+.prow{display:flex;gap:8px;align-items:center;list-style:none}
+.prow input{width:22px;height:22px;flex:none}
+.prow .rec{flex:1;min-width:0}
 #dial{width:100%;height:100%;display:block}
 .readout .big{font-family:var(--f-disp);font-weight:700;font-size:64px;line-height:.95;font-variant-numeric:tabular-nums;letter-spacing:.01em;display:flex;align-items:baseline;gap:4px}
 .readout .big .sep{color:var(--muted);font-weight:500}
@@ -861,10 +869,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div class="cap" id="rdCap">dip / dip direction</div>
           <div class="sub" id="rdSub">Strike — (right-hand rule)</div>
           <div class="steady" id="steady"><div class="bar"><i id="steadyFill"></i></div><span id="steadyTxt">Compass not started</span></div>
-          <div class="row" style="margin-top:12px">
-            <button class="btn" id="btnStart" type="button">Start compass</button>
-            <button class="btn" id="btnManual" type="button">Type it in</button>
-          </div>
+        </div>
+        <div class="recrow">
+          <button class="btn primary big" id="btnRecord" type="button">Start compass</button>
+          <button class="btn" id="btnManual" type="button">Type it in</button>
+          <label class="row small" style="gap:6px;cursor:pointer;flex-basis:100%"><input type="checkbox" id="autoRec"> Record by itself when held steady</label>
         </div>
       </div>
 
@@ -891,10 +900,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <span id="photoLbl">Add photo</span>
         </label>
         <input type="file" id="photo" accept="image/*" capture="environment" hidden>
-        <label class="row small" style="gap:6px;cursor:pointer"><input type="checkbox" id="autoRec"> Record by itself when held steady</label>
-      </div>
-      <div class="row">
-        <button class="btn primary big" id="btnRecord" type="button" disabled>Record</button>
       </div>
 
       <div class="row-between"><h3>Last readings</h3><button class="btn" id="btnUndo" type="button" hidden>Undo last</button></div>
@@ -938,6 +943,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <label class="btn" for="mapImport" style="cursor:pointer">Import KML / GeoJSON</label>
         <input type="file" id="mapImport" accept=".kml,.geojson,.json,application/vnd.google-earth.kml+xml,application/json" hidden>
       </div>
+      <div class="row-between"><h3>Projected planes</h3><button class="btn" id="planeNew" type="button">Project a plane</button></div>
+      <p class="small muted" style="margin:0">A saved attitude drawn across the map: strike line, structure contours and, with signal, where it should meet the ground. Tick to show, untick to hide.</p>
+      <ul class="loglist" id="planeList"></ul>
       <div class="row-between"><h3>Lines and units</h3></div>
       <ul class="loglist" id="featList"></ul>
     </section>
@@ -1202,10 +1210,10 @@ var inViewer = !!(window.claude && typeof window.claude.use === 'function');
 var dlCap = inViewer ? window.claude.use('downloads').catch(function(){ return null; }) : Promise.resolve(null);
 
 /* ---------- state ---------- */
-var state = {recs:[], features:[], units:[], overlays:[], seq:0, station:'ST-001', exSeeded:false,
+var state = {recs:[], features:[], units:[], overlays:[], planes:[], seq:0, station:'ST-001', exSeeded:false,
   set:{decl:0, north:'true', proj:'utm', offE:0, offN:0, hold:2, win:1, autoRec:false, walkStep:10},
   ui:{tab:'measure', mode:'plane', type:'Bedding', ltype:'Slickenline', proj:'area', show:'pd', aTypes:null, aStation:''}};
-function load(){ try{ var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.recs){ state.recs = s.recs; state.seq = s.seq||0; state.station = s.station||'ST-001'; state.exSeeded = !!s.exSeeded; state.features = s.features || []; state.units = s.units || []; state.overlays = s.overlays || []; state.mapSeeded = !!s.mapSeeded;
+function load(){ try{ var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.recs){ state.recs = s.recs; state.seq = s.seq||0; state.station = s.station||'ST-001'; state.exSeeded = !!s.exSeeded; state.features = s.features || []; state.planes = s.planes || []; state.units = s.units || []; state.overlays = s.overlays || []; state.mapSeeded = !!s.mapSeeded;
   Object.assign(state.set, s.set||{}); Object.assign(state.ui, s.ui||{}); } }catch(e){}
   if (!state.exSeeded && !state.recs.length){ seedExamples(); state.exSeeded = true; }
   if (!state.mapSeeded){ if (!state.features.length && state.recs.some(function(r){ return r.src === 'example'; })) seedExampleMap(); state.mapSeeded = true; } }
@@ -1283,12 +1291,12 @@ function activeKind(){ var md = state.ui.mode; if (md === 'pl') return S.pending
 
 function startCompass(){
   var go = function(){ window.addEventListener('deviceorientationabsolute', onAbs, true); window.addEventListener('deviceorientation', onRel, true);
-    S.on = true; $('btnStart').textContent = 'Compass on'; $('btnStart').disabled = true; startGPS(); keepAwake(); requestAnimationFrame(loop);
+    S.on = true; startGPS(); keepAwake(); requestAnimationFrame(loop);
     setTimeout(function(){ if (!S.lastT) showSensorProblem('none'); }, 2500); };
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
     DeviceOrientationEvent.requestPermission().then(function(r){ if (r === 'granted') go(); else showSensorProblem('denied'); }).catch(function(){ showSensorProblem('denied'); });
   } else if (typeof DeviceOrientationEvent === 'undefined'){ showSensorProblem('none'); } else go(); }
-function showSensorProblem(kind){ var b = $('sensorBanner'); b.hidden = false; $('btnStart').disabled = false; $('btnStart').textContent = 'Try again';
+function showSensorProblem(kind){ var b = $('sensorBanner'); b.hidden = false; S.on = false; S.failed = true; recBtn(null);
   var where = inViewer ? ' This page is open inside the Claude viewer, which does not pass motion sensors or GPS to pages. Open the app file in Chrome or Safari on your phone to measure (see Settings ▸ Install on your phone).' : ' Check that the browser is allowed to use motion sensors and that the page is opened over https.';
   b.innerHTML = '<b>' + (kind === 'denied' ? 'Motion sensors were refused.' : 'No compass readings from this device.') + '</b>' + esc(where) + ' You can still type readings with <b>Type it in</b>.'; }
 function startGPS(){ if (S.watch != null) return; if (!navigator.geolocation){ setGpsChip(); return; }
@@ -1303,13 +1311,18 @@ document.addEventListener('visibilitychange', function(){ if (document.visibilit
 /* ---------- measure view ---------- */
 var lastDraw = 0;
 function loop(t){ if (!S.on) return; if (t - lastDraw > 90){ lastDraw = t; updateLive(); } requestAnimationFrame(loop); }
+function recBtn(r){ var b = $('btnRecord'); if (!S.on){ b.disabled = false; b.classList.remove('steady'); b.textContent = S.failed ? 'Try the compass again' : 'Start compass'; return; }
+  if (!r){ b.disabled = true; b.textContent = 'Waiting for the sensors…'; return; } b.disabled = false;
+  var pl = state.ui.mode === 'pl' && !S.pendingPlane ? 'plane ' : state.ui.mode === 'pl' ? 'line ' : '';
+  b.textContent = 'Record ' + pl + (r.kind === 'line' ? fmtLine(r.trend, r.plunge) : fmtPlane(r)); }
 function updateLive(){ var r = S.lastT ? currentReading() : null; renderReadout(r); drawDial(r);
   var stEl = $('steady'), fill = $('steadyFill'), txt = $('steadyTxt');
-  if (!r){ fill.style.width = '0'; txt.textContent = S.on ? 'Waiting for the sensors…' : 'Compass not started'; $('btnRecord').disabled = !S.on; return; }
+  recBtn(r);
+  if (!r){ fill.style.width = '0'; txt.textContent = S.on ? 'Waiting for the sensors…' : 'Compass not started'; return; }
   var steady = r.spread < 1.5 && r.n >= 4, q = GM.clamp(1 - r.spread/8, 0, 1);
   fill.style.width = Math.round(q*100) + '%'; stEl.classList.toggle('is-steady', steady);
   txt.textContent = (steady ? 'Steady' : 'Hold still') + ' · ±' + r.spread.toFixed(1) + '°' + (S.src === 'relative' ? ' · azimuth not tied to north' : '');
-  $('btnRecord').disabled = false;
+  $('btnRecord').classList.toggle('steady', steady);
   var now = performance.now();
   if (steady){ if (!S.steadySince) S.steadySince = now; } else S.steadySince = 0;
   if (!S.armed && S.lastAuto){ var v = activeKind() === 'line' ? GM.lineVec(r.trend, r.plunge) : GM.normalUp(r.dip, r.dipdir); if (GM.axAngle(v, S.lastAuto) > 12) S.armed = true; }
@@ -1372,14 +1385,14 @@ function recRow(r){ var t = new Date(r.t), when = isNaN(t) ? '' : t.toLocaleDate
 function renderRecent(){ var list = state.recs.slice(-5).reverse(); $('recent').innerHTML = list.length ? list.map(recRow).join('') : '<li class="muted small">Nothing recorded yet.</li>'; }
 function updatePlStep(){ var el = $('plStep'); if (state.ui.mode !== 'pl'){ el.hidden = true; return; } el.hidden = false;
   el.textContent = S.pendingPlane ? 'Step 2 of 2 · plane ' + fmtPlane(S.pendingPlane) + ' kept — now the line on it' : 'Step 1 of 2 · the plane (fault, foliation…)';
-  $('btnRecord').textContent = S.pendingPlane ? 'Record line' : 'Record plane'; renderTypeChips(); }
+  renderTypeChips(); }
 function renderTypeChips(){ var line = activeKind() === 'line', list = line ? LINES : PLANES, cur = line && state.ui.mode === 'pl' ? state.ui.ltype : state.ui.type;
   if (list.indexOf(cur) < 0){ cur = list[0]; if (line && state.ui.mode === 'pl') state.ui.ltype = cur; else state.ui.type = cur; }
   $('typeChips').innerHTML = list.map(function(t){ return '<button type="button" class="chip' + (line ? ' ln' : '') + '" aria-pressed="' + (t === cur) + '" data-t="' + esc(t) + '">' + esc(t) + '</button>'; }).join(''); }
 function setMode(m){ state.ui.mode = m; S.pendingPlane = null; document.querySelectorAll('#modeSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.mode === m); });
   if (m === 'pl' && state.ui.type === 'Bedding') state.ui.type = 'Fault';
   if (m === 'line' && !isLineType(state.ui.type)) state.ui.type = 'Lineation'; if (m !== 'line' && isLineType(state.ui.type)) state.ui.type = 'Bedding';
-  $('btnRecord').textContent = 'Record'; updatePlStep(); renderTypeChips(); persist(); updateLive(); }
+  updatePlStep(); renderTypeChips(); persist(); updateLive(); }
 function setNorthLabel(){ var s = state.set; $('northLbl').textContent = (s.north === 'grid' ? 'Grid north' : s.north === 'mag' ? 'Magnetic north' : 'True north') + (s.north !== 'mag' ? ' · decl ' + (+s.decl).toFixed(1) + '°' : ''); }
 
 /* ---------- sheets ---------- */
@@ -1400,7 +1413,7 @@ function recordSheet(rec){ var isNew = !rec, r = rec || {kind: state.ui.mode ===
    + '<h3>Position</h3><div class="grid2"><label class="f">Latitude<input type="number" id="rLat" step="any" value="' + (pos.lat != null ? (+pos.lat).toFixed(6) : '') + '"></label><label class="f">Longitude<input type="number" id="rLon" step="any" value="' + (pos.lon != null ? (+pos.lon).toFixed(6) : '') + '"></label></div>'
    + '<div class="grid2"><label class="f">Easting<input type="number" id="rE" step="any" value="' + (r.E != null ? r.E : g ? (g.E + (+state.set.offE||0)).toFixed(1) : '') + '"></label><label class="f">Northing<input type="number" id="rN" step="any" value="' + (r.N != null ? r.N : g ? (g.N + (+state.set.offN||0)).toFixed(1) : '') + '"></label></div>'
    + '<p class="small muted" style="margin:0">Easting/northing are worked out from latitude/longitude on export (' + esc(g ? g.label : projLabel()) + '). Type them only for points without latitude/longitude.</p>'
-   + (pos.lat != null ? '<div class="row"><a class="btn" href="' + gmapsUrl(pos.lat, pos.lon) + '" target="_blank" rel="noopener">Open in Google Maps</a></div>' : '')
+   + '<div class="row">' + (!isNew && r.dip != null ? '<button class="btn primary" id="rProject" type="button">Project on map</button>' : '') + (pos.lat != null ? '<a class="btn" href="' + gmapsUrl(pos.lat, pos.lon) + '" target="_blank" rel="noopener">Open in Google Maps</a>' : '') + '</div>'
    + '<div id="rPhoto"></div><div class="acts">' + (isNew ? '' : '<button class="btn danger" id="rDel" type="button">Delete</button>') + '<button class="btn" id="rCancel" type="button">Cancel</button><button class="btn primary" id="rSave" type="button">Save</button></div>';
   openSheet(isNew ? 'Type a reading' : 'Reading', html, function(){ var kind = r.kind;
     function sync(){ $('rPlane').hidden = kind === 'line'; $('rLine').hidden = kind === 'plane'; $('rLtypeWrap').hidden = kind !== 'pl';
@@ -1411,6 +1424,7 @@ function recordSheet(rec){ var isNew = !rec, r = rec || {kind: state.ui.mode ===
     $('rAtt').oninput = att; att();
     if (r.photo) PhotoDB.get(r.id).then(function(b){ if (b){ var u = URL.createObjectURL(b); $('rPhoto').innerHTML = '<img src="' + u + '" alt="Outcrop photo" style="border-radius:8px">'; } });
     $('rCancel').onclick = closeSheet;
+    if ($('rProject')) $('rProject').onclick = function(){ var ex = state.planes.find(function(x){ return x.recId === r.id; }); closeSheet(); if (ex){ ex.show = true; persist(); showTab('map'); setTimeout(function(){ zoomPlane(ex); planeSheet(ex); }, 400); } else planeSheet(newPlaneFrom(r), true); };
     if ($('rDel')) $('rDel').onclick = function(){ var b = $('rDel'); if (b.dataset.sure){ state.recs = state.recs.filter(function(x){ return x.id !== r.id; }); if (r.photo) PhotoDB.del(r.id); persist(); closeSheet(); refreshAll(); toast('Deleted'); } else { b.dataset.sure = '1'; b.textContent = 'Tap again to delete'; } };
     $('rSave').onclick = function(){ var out = Object.assign({}, rec || baseRecord(), {kind:kind, type:$('rType').value, station:$('rSt').value.trim(), rock:$('rRock').value.trim(), note:$('rNote').value.trim(), method:$('rMeth').value});
       if (out.src === 'example') out.src = 'user';
@@ -1474,7 +1488,7 @@ function copyFallback(text){ if (navigator.clipboard && navigator.clipboard.writ
 function showText(text){ openSheet('Copy this', '<textarea id="cpTxt" style="min-height:240px;font-family:var(--f-mono);font-size:12px">' + esc(text) + '</textarea>', function(){ $('cpTxt').select(); }); }
 function backup(){ var recs = state.recs, ids = recs.filter(function(r){ return r.photo; }).map(function(r){ return r.id; }).concat(state.overlays.map(function(o){ return 'ov:' + o.id; })), photos = {};
   return Promise.all(ids.map(function(id){ return PhotoDB.get(id).then(function(b){ if (!b) return; return new Promise(function(res){ var fr = new FileReader(); fr.onload = function(){ photos[id] = fr.result; res(); }; fr.onerror = function(){ res(); }; fr.readAsDataURL(b); }); }); }))
-    .then(function(){ return JSON.stringify({app:'Outcrop Field Book', version:2, saved:new Date().toISOString(), settings:state.set, records:recs, features:state.features, units:state.units, overlays:state.overlays, photos:photos}); }); }
+    .then(function(){ return JSON.stringify({app:'Outcrop Field Book', version:2, saved:new Date().toISOString(), settings:state.set, records:recs, features:state.features, planes:state.planes, units:state.units, overlays:state.overlays, photos:photos}); }); }
 
 /* import */
 function parseCSV(text){ var rows = [], row = [], f = '', q = false; text = text.replace(/^﻿/, '');
@@ -1506,6 +1520,7 @@ function importJSON(text){ var d = JSON.parse(text), recs = d.records || [], hav
   recs.forEach(function(r){ if (!r || have[r.id] || (r.dip == null && r.trend == null)) return; state.recs.push(r); n++; });
   var hf = {}; state.features.forEach(function(f){ hf[f.id] = 1; }); (d.features || []).forEach(function(f){ if (f && !hf[f.id] && f.coords){ state.features.push(f); n++; } });
   (d.units || []).forEach(function(u){ if (u && !unitOf(u.name)) state.units.push(u); });
+  var hp = {}; state.planes.forEach(function(p){ hp[p.id] = 1; }); (d.planes || []).forEach(function(p){ if (p && !hp[p.id]){ state.planes.push(p); n++; } });
   var ho = {}; state.overlays.forEach(function(o){ ho[o.id] = 1; }); (d.overlays || []).forEach(function(o){ if (o && !ho[o.id]) state.overlays.push(o); });
   var ph = d.photos || {}; Object.keys(ph).forEach(function(id){ try{ fetch(ph[id]).then(function(x){ return x.blob(); }).then(function(b){ PhotoDB.put(id, b); }); }catch(e){} });
   return n; }
@@ -1564,12 +1579,15 @@ function drawNet(A){ var cv = $('net'), dpr = window.devicePixelRatio || 1, W = 
     ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.beginPath(); GM.greatCircle(pl.dip, pl.dipdir, 64).forEach(function(v,j){ var q = P(v); if (j) ctx.lineTo(q[0],q[1]); else ctx.moveTo(q[0],q[1]); }); ctx.stroke();
     ctx.fillStyle = col; ctx.strokeStyle = cssv('--surface'); ctx.lineWidth = 2; ctx.fillRect(p[0]-5, p[1]-5, 10, 10); ctx.strokeRect(p[0]-5, p[1]-5, 10, 10); label(ctx, [p[0], p[1]+2], 'S' + (i+1), col); });
   if (A.fold){ var b = P(GM.lineVec(A.fold.beta.trend, A.fold.beta.plunge)); ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(b[0], b[1], 5, 0, 7); ctx.fill(); label(ctx, [b[0], b[1]-4], 'β ' + fmtLine(A.fold.beta.trend, A.fold.beta.plunge), ink); }
+  state.planes.forEach(function(sp){ if (!sp.showNet) return; ctx.strokeStyle = sp.color || '#ff7a2f'; ctx.lineWidth = 2; ctx.setLineDash([8,4]); ctx.beginPath(); GM.greatCircle(sp.dip, sp.dipdir, 64).forEach(function(v,i){ var q = P(v); if (i) ctx.lineTo(q[0],q[1]); else ctx.moveTo(q[0],q[1]); }); ctx.stroke(); ctx.setLineDash([]);
+    var pq = P(GM.poleVec(sp.dip, sp.dipdir)); ctx.fillStyle = sp.color || '#ff7a2f'; ctx.beginPath(); ctx.moveTo(pq[0], pq[1]-6); ctx.lineTo(pq[0]+6, pq[1]); ctx.lineTo(pq[0], pq[1]+6); ctx.lineTo(pq[0]-6, pq[1]); ctx.closePath(); ctx.fill(); label(ctx, pq, sp.name || fmtPlane(sp), sp.color || ink); });
   if (ptr){ var pp = P(ptr); ctx.strokeStyle = cssv('--accent'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pp[0], pp[1], 8, 0, 7); ctx.stroke(); }
   var lg = []; if (show !== 'd' && A.planes.length) lg.push('<span><i style="background:var(--plane)"></i>Poles to planes (' + A.planes.length + ')</span>');
   if (A.lines.length) lg.push('<span><i style="background:var(--linec);border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)"></i>Lines (' + A.lines.length + ')</span>');
   if ((show === 'pd' || show === 'd') && A.poles.length >= 3) lg.push('<span><i style="background:rgb(' + cssv('--dens').split(/\s+/).join(',') + ')"></i>Density 1, 2, 4, 8, 16 × even spread</span>');
   (A.sets || []).forEach(function(s,i){ lg.push('<span><i style="background:var(' + ['--s1','--s2','--s3','--s4'][i%4] + ');border-radius:2px"></i>S' + (i+1) + ' mean plane</span>'); });
   if (A.pe && A.shape === 'girdle' && A.poles.length >= 5) lg.push('<span>- - π girdle (best-fit great circle)</span>');
+  state.planes.forEach(function(sp){ if (sp.showNet) lg.push('<span><i style="background:' + esc(sp.color) + ';border-radius:0;transform:rotate(45deg) scale(.8)"></i>' + esc(sp.name || 'Plane') + ' ' + fmtPlane(sp) + ' (saved plane)</span>'); });
   $('netLegend').innerHTML = lg.join(''); }
 function label(ctx, p, text, col){ ctx.font = '700 13px ' + cssv('--f-mono'); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; var w = ctx.measureText(text).width;
   ctx.fillStyle = cssv('--surface'); ctx.globalAlpha = .85; ctx.fillRect(p[0]+7, p[1]-9, w+6, 17); ctx.globalAlpha = 1; ctx.fillStyle = col; ctx.fillText(text, p[0]+10, p[1]); }
@@ -1652,11 +1670,11 @@ function gmapsUrl(lat, lon){ return 'https://www.google.com/maps/search/?api=1&q
 function initMap(){ if (MAP.m){ MAP.m.invalidateSize(); renderMapData(); return; }
   if (!window.L){ var n = $('mapNote'); n.hidden = false; n.innerHTML = '<b>The map library did not load.</b> Open the app once with signal so it is kept for offline use.'; return; }
   var m = L.map('map', {zoomControl:true, worldCopyJump:true}); MAP.m = m;
-  MAP.ovL = L.layerGroup().addTo(m); MAP.ft = L.layerGroup().addTo(m); MAP.deco = L.layerGroup().addTo(m); MAP.rd = L.layerGroup().addTo(m); MAP.gpsL = L.layerGroup().addTo(m); MAP.dr = L.layerGroup().addTo(m); MAP.editL = L.layerGroup().addTo(m);
+  MAP.ovL = L.layerGroup().addTo(m); MAP.ft = L.layerGroup().addTo(m); MAP.deco = L.layerGroup().addTo(m); MAP.rd = L.layerGroup().addTo(m); MAP.gpsL = L.layerGroup().addTo(m); MAP.dr = L.layerGroup().addTo(m); MAP.editL = L.layerGroup().addTo(m); MAP.pl = L.layerGroup().addTo(m);
   setBase(state.ui.base || 'sat');
   var v = state.ui.mapView; if (v && isFinite(v[0])) m.setView([v[0], v[1]], v[2]); else fitData();
   m.on('moveend', function(){ var c = m.getCenter(); state.ui.mapView = [c.lat, c.lng, m.getZoom()]; $('gmLink').href = gmapsUrl(c.lat, c.lng); persist(); });
-  m.on('zoomend', function(){ drawDeco(); renderReadings(); }); m.on('moveend', drawDeco);
+  m.on('zoomend', function(){ drawDeco(); renderReadings(); renderPlanes(); }); m.on('moveend', drawDeco);
   m.on('click', function(e){ if (DR) addDrawPoint(e.latlng); });
   var c0 = m.getCenter(); $('gmLink').href = gmapsUrl(c0.lat, c0.lng);
   renderOverlays(); renderMapData(); if (S.gps) onGpsFix(); }
@@ -1699,7 +1717,7 @@ function renderMapData(){ if (!MAP.m) return; MAP.ft.clearLayers();
     lay.on('click', function(e){ L.DomEvent.stop(e); if (DR){ addDrawPoint(e.latlng); return; } if (!EDIT) featureSheet(f); });
     var lab = f.geom === 'poly' ? (f.kind === 'Area' ? f.name || 'Area' : f.unit) : [f.kind, f.name].filter(Boolean).join(' · ');
     if (lab) lay.bindTooltip(esc(lab), {sticky:true}); lay.addTo(MAP.ft); });
-  renderReadings(); drawDeco(); renderMapPanel(); }
+  renderReadings(); drawDeco(); renderMapPanel(); renderPlanes(); renderPlaneList(); }
 
 /* decorations drawn in screen space: thrust teeth, normal-fault ticks, fold arrows */
 function walk(pts, spacing, start){ var out = [], acc = -(start == null ? spacing/2 : start);
@@ -1841,7 +1859,7 @@ function importMapFile(text, name){ var added = 0, pts = 0, have = {}; state.fea
       Array.prototype.forEach.call(pm.getElementsByTagName('Polygon'), function(pg){ var c = pg.getElementsByTagName('coordinates')[0]; if (c){ var cc = coords(c); if (cc.length > 3) cc.pop(); addPoly(cc, {name:nm}); } }); }); }
   else { var d = JSON.parse(text), feats = d.type === 'FeatureCollection' ? d.features : d.type === 'Feature' ? [d] : [];
     feats.forEach(function(ft){ var g = ft.geometry || {}, p = ft.properties || {}; function cv(a){ return a.map(function(q){ return [q[1], q[0]]; }); }
-      if (g.type === 'LineString') addLine(cv(g.coordinates), p); else if (g.type === 'MultiLineString') g.coordinates.forEach(function(l){ addLine(cv(l), p); });
+      if (p.kind === 'Projected plane') return; if (g.type === 'LineString') addLine(cv(g.coordinates), p); else if (g.type === 'MultiLineString') g.coordinates.forEach(function(l){ addLine(cv(l), p); });
       else if (g.type === 'Polygon'){ var r = cv(g.coordinates[0]); if (r.length > 3) r.pop(); addPoly(r, p); }
       else if (g.type === 'MultiPolygon') g.coordinates.forEach(function(pg){ var r = cv(pg[0]); if (r.length > 3) r.pop(); addPoly(r, p); });
       else if (g.type === 'Point' && (p.dip != null || p.trend != null) && !state.recs.some(function(r){ return r.id === p.id; })){
@@ -1852,7 +1870,7 @@ function mapGeoJSON(){ var feats = state.features.filter(function(f){ return f.s
     var props = {id:f.id, kind:f.kind, name:f.name || '', note:f.note || ''}; if (f.geom === 'line'){ props.sub = f.sub; props.side = f.side; props.length_m = Math.round(lengthOf(f.coords)); } else { props.unit = f.unit || ''; props.color = u ? u.color : ''; props.area_m2 = Math.round(areaOf(f.coords)); }
     var c = f.coords.map(function(p){ return [+p[1].toFixed(7), +p[0].toFixed(7)]; });
     return {type:'Feature', properties:props, geometry: f.geom === 'line' ? {type:'LineString', coordinates:c} : {type:'Polygon', coordinates:[c.concat([c[0]])]}}; });
-  var pts = JSON.parse(toGeoJSON(exportRecs())).features; return JSON.stringify({type:'FeatureCollection', name:'Outcrop map', features:feats.concat(pts)}, null, 1); }
+  var pts = JSON.parse(toGeoJSON(exportRecs())).features; return JSON.stringify({type:'FeatureCollection', name:'Outcrop map', features:feats.concat(planeFeatures(), pts)}, null, 1); }
 function kmlColor(hex, a){ var h = (hex || '#888888').replace('#', ''); if (h.length === 3) h = h.split('').map(function(x){ return x + x; }).join(''); var m = /rgb\((\d+),(\d+),(\d+)\)/.exec(hex || ''); if (m) h = [m[1], m[2], m[3]].map(function(x){ return ('0' + (+x).toString(16)).slice(-2); }).join('');
   return a + h.slice(4, 6) + h.slice(2, 4) + h.slice(0, 2); }
 function mapKML(){ var pm = state.features.map(function(f){ var c = f.coords.map(function(p){ return (+p[1]).toFixed(7) + ',' + (+p[0]).toFixed(7) + ',0'; });
@@ -1871,6 +1889,126 @@ function seedExampleMap(){ var lat0 = -30.7485 + 4.5*0.00042, lon0 = 121.4620 + 
     {id:'exf3', geom:'line', kind:'Thrust fault', sub:'inferred', side:'left', coords:[at(-300, 260), at(-60, 300), at(240, 250)], src:'example', t:t},
     {id:'exf4', geom:'poly', kind:'Unit', unit:'Siltstone (example)', coords:[at(-260, -170), at(-80, -235), at(120, -260), at(300, -215), at(300, -420), at(-260, -420)], src:'example', t:t}]; }
 
+/* ---------- projected planes: a measured attitude drawn across the map ---------- */
+var DEM_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
+var PLANE_COLS = ['#ff7a2f','#00b0ff','#ffd600','#e040fb','#76ff03','#ff1744'];
+var MLAT = 110574, MLON = 111320;
+function toLocal(lat, lon, o){ return [(lon - o.lon)*MLON*Math.cos(o.lat*GM.D), (lat - o.lat)*MLAT]; }
+function toLL(x, y, o){ return [o.lat + y/MLAT, o.lon + x/(MLON*Math.cos(o.lat*GM.D))]; }
+function planeZ(p, x, y){ var a = p.dipdir*GM.D; return p.z0 - Math.tan(Math.min(p.dip, 89.9)*GM.D)*(x*Math.sin(a) + y*Math.cos(a)); }
+function planeById(id){ return state.planes.find(function(p){ return p.id === id; }); }
+
+/* terrain from Terrarium tiles (AWS open terrain, mostly SRTM ~30 m) */
+var demCache = {};
+function demTile(z, x, y){ var key = z + '/' + x + '/' + y; if (demCache[key]) return demCache[key];
+  var url = DEM_URL.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+  demCache[key] = fetch(url, {mode:'cors'}).then(function(r){ if (!r.ok) throw new Error('tile ' + r.status); return r.blob(); })
+    .then(function(b){ return createImageBitmap(b); }).then(function(img){ var c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      var x2 = c.getContext('2d', {willReadFrequently:true}); x2.drawImage(img, 0, 0); var d = x2.getImageData(0, 0, c.width, c.height).data, n = c.width*c.height, e = new Float32Array(n);
+      for (var i=0;i<n;i++) e[i] = d[i*4]*256 + d[i*4+1] + d[i*4+2]/256 - 32768; return {w:c.width, h:c.height, e:e}; })
+    .catch(function(err){ delete demCache[key]; throw err; });
+  return demCache[key]; }
+function tileXY(lat, lon, z){ var n = Math.pow(2, z), la = GM.clamp(lat, -85, 85)*GM.D; return [(lon + 180)/360*n, (1 - Math.log(Math.tan(la) + 1/Math.cos(la))/Math.PI)/2*n]; }
+function loadDem(o, radius){ var la0 = o.lat - radius/MLAT, la1 = o.lat + radius/MLAT, dl = radius/(MLON*Math.cos(o.lat*GM.D)), lo0 = o.lon - dl, lo1 = o.lon + dl, z = 15, a, b;
+  for (; z > 8; z--){ a = tileXY(la1, lo0, z); b = tileXY(la0, lo1, z); if ((Math.floor(b[0]) - Math.floor(a[0]) + 1)*(Math.floor(b[1]) - Math.floor(a[1]) + 1) <= 16) break; }
+  var jobs = [], tiles = {};
+  for (var tx = Math.floor(a[0]); tx <= Math.floor(b[0]); tx++) for (var ty = Math.floor(a[1]); ty <= Math.floor(b[1]); ty++) (function(tx, ty){ jobs.push(demTile(z, tx, ty).then(function(t){ tiles[tx + ',' + ty] = t; })); })(tx, ty);
+  return Promise.all(jobs).then(function(){ return {z:z, at:function(lat, lon){ var p = tileXY(lat, lon, z), t = tiles[Math.floor(p[0]) + ',' + Math.floor(p[1])]; if (!t) return NaN;
+    var fx = (p[0] - Math.floor(p[0]))*t.w - .5, fy = (p[1] - Math.floor(p[1]))*t.h - .5, x0 = GM.clamp(Math.floor(fx), 0, t.w-2), y0 = GM.clamp(Math.floor(fy), 0, t.h-2), u = GM.clamp(fx - x0, 0, 1), v = GM.clamp(fy - y0, 0, 1), e = t.e, w = t.w;
+    return e[y0*w+x0]*(1-u)*(1-v) + e[y0*w+x0+1]*u*(1-v) + e[(y0+1)*w+x0]*(1-u)*v + e[(y0+1)*w+x0+1]*u*v; }}; }); }
+
+/* zero contour of (terrain - plane) by marching squares, joined into lines */
+function traceLines(p, dem){ var R = p.extent, N = Math.min(240, Math.max(60, Math.round(2*R/8))), step = 2*R/N, F = [], i, j;
+  for (i=0;i<=N;i++){ var row = []; for (j=0;j<=N;j++){ var x = -R + j*step, y = -R + i*step, ll = toLL(x, y, p); row.push(dem.at(ll[0], ll[1]) - planeZ(p, x, y)); } F.push(row); }
+  var segs = [];
+  function pt(i1, j1, i2, j2){ var a = F[i1][j1], b = F[i2][j2], t = a / (a - b); return [-R + (j1 + (j2 - j1)*t)*step, -R + (i1 + (i2 - i1)*t)*step]; }
+  for (i=0;i<N;i++) for (j=0;j<N;j++){ var f0 = F[i][j], f1 = F[i][j+1], f2 = F[i+1][j+1], f3 = F[i+1][j]; if (!isFinite(f0 + f1 + f2 + f3)) continue;
+    var c = (f0 > 0 ? 1 : 0) | (f1 > 0 ? 2 : 0) | (f2 > 0 ? 4 : 0) | (f3 > 0 ? 8 : 0); if (c === 0 || c === 15) continue;
+    var B = pt(i, j, i, j+1), Rt = pt(i, j+1, i+1, j+1), T = pt(i+1, j, i+1, j+1), L0 = pt(i, j, i+1, j), mid = (f0 + f1 + f2 + f3)/4;
+    var map = {1:[[L0,B]], 2:[[B,Rt]], 3:[[L0,Rt]], 4:[[Rt,T]], 6:[[B,T]], 7:[[L0,T]], 8:[[T,L0]], 9:[[T,B]], 11:[[T,Rt]], 12:[[Rt,L0]], 13:[[Rt,B]], 14:[[B,L0]]};
+    var s = c === 5 ? (mid > 0 ? [[L0,T],[B,Rt]] : [[L0,B],[Rt,T]]) : c === 10 ? (mid > 0 ? [[B,L0],[T,Rt]] : [[B,Rt],[L0,T]]) : map[c];
+    s.forEach(function(q){ var mx = (q[0][0] + q[1][0])/2, my = (q[0][1] + q[1][1])/2; if (mx*mx + my*my <= R*R) segs.push(q); }); }
+  var key = function(q){ return Math.round(q[0]*100) + ',' + Math.round(q[1]*100); }, ends = {}, used = new Array(segs.length), lines = [];
+  segs.forEach(function(s, k){ [0, 1].forEach(function(e){ var kk = key(s[e]); (ends[kk] = ends[kk] || []).push(k); }); });
+  function grow(line, tail){ for (;;){ var q = line[line.length-1], cand = (ends[key(q)] || []).filter(function(k){ return !used[k]; }); if (!cand.length) return; var k = cand[0]; used[k] = true; var s = segs[k]; line.push(key(s[0]) === key(q) ? s[1] : s[0]); } }
+  segs.forEach(function(s, k){ if (used[k]) return; used[k] = true; var line = [s[0], s[1]]; grow(line); line.reverse(); grow(line); if (line.length >= 3) lines.push(line); });
+  return lines.map(function(l){ return l.map(function(q){ var ll = toLL(q[0], q[1], p); return [+ll[0].toFixed(6), +ll[1].toFixed(6)]; }); }); }
+function computeTrace(p, quiet){ if (inViewer){ if (!quiet) toast('Terrain is not available inside the Claude viewer. Open the installed app to draw the ground trace.'); return Promise.resolve(false); }
+  p.busy = true; renderPlanes();
+  return loadDem(p, p.extent).then(function(dem){ var z = dem.at(p.lat, p.lon); if (p.zSrc !== 'typed' && isFinite(z)){ p.z0 = Math.round(z*10)/10; p.zSrc = 'terrain'; }
+      if (p.z0 == null || !isFinite(p.z0)){ throw new Error('no elevation'); }
+      p.trace = traceLines(p, dem); p.traceAt = new Date().toISOString(); p.demZoom = dem.z; p.busy = false; persist(); renderPlanes(); renderPlaneList();
+      if (!quiet) toast(p.trace.length ? 'Ground trace drawn for ' + (p.name || fmtPlane(p)) : 'The plane does not reach the ground inside ' + fmtDist(p.extent)); return true; })
+    .catch(function(){ p.busy = false; renderPlanes(); renderPlaneList(); if (!quiet) toast('Could not load terrain. Check the signal and try again. Structure contours are still shown.'); return false; }); }
+
+/* drawing on the map */
+function renderPlanes(){ if (!MAP.m || !MAP.pl) return; MAP.pl.clearLayers(); var zoom = MAP.m.getZoom();
+  state.planes.forEach(function(p){ if (!p.show) return; var col = p.color || '#ff7a2f', R = p.extent, a = p.dipdir*GM.D, sx = Math.sin(a - Math.PI/2), sy = Math.cos(a - Math.PI/2), dx = Math.sin(a), dy = Math.cos(a), o = p;
+    L.circle([p.lat, p.lon], {radius:R, color:col, weight:1, opacity:.5, dashArray:'2 6', fill:false, interactive:false}).addTo(MAP.pl);
+    if (p.dip > 0.5 && p.dip < 89.5 && p.contours !== false){ var iv = Math.max(1, +p.interval || 10), sp = iv/Math.tan(p.dip*GM.D), k0 = Math.ceil(R/sp), mpp = 156543.03*Math.cos(p.lat*GM.D)/Math.pow(2, zoom), nice = [1,2,5,10,20,50,100,200,500], mult = 1, lab = 1, ni;
+      for (ni = 0; ni < nice.length && sp*nice[ni]/mpp < 14; ni++); mult = nice[Math.min(ni, nice.length-1)];
+      for (ni = 0; ni < nice.length && (nice[ni] % mult || sp*nice[ni]/mpp < 44); ni++); lab = nice[Math.min(ni, nice.length-1)];
+      for (var k = -k0; k <= k0; k++){ if (!k || k % mult) continue; var s = k*sp; if (Math.abs(s) >= R) continue; var h = Math.sqrt(R*R - s*s), cx = dx*s, cy = dy*s;
+        var A = toLL(cx - sx*h, cy - sy*h, o), B = toLL(cx + sx*h, cy + sy*h, o);
+        L.polyline([A, B], {color:col, weight: k % lab ? 1.1 : 1.8, opacity:.85, dashArray:'6 5', interactive:false}).addTo(MAP.pl);
+        if (k % lab === 0){ var lz = p.z0 != null && isFinite(p.z0) ? Math.round(p.z0 - k*iv) + ' m' : (k > 0 ? '−' : '+') + Math.abs(k*iv) + ' m';
+          L.marker(B, {icon:L.divIcon({className:'plab', html:'<span style="color:' + col + '">' + lz + '</span>', iconSize:[0,0]}), interactive:false}).addTo(MAP.pl); } } }
+    var S1 = toLL(-sx*R, -sy*R, o), S2 = toLL(sx*R, sy*R, o);
+    L.polyline([S1, S2], {color:'#ffffff', weight:5, opacity:.7, interactive:false}).addTo(MAP.pl);
+    L.polyline([S1, S2], {color:col, weight:2.5, interactive:false}).addTo(MAP.pl);
+    (p.trace || []).forEach(function(l){ L.polyline(l, {color:'#ffffff', weight:7, opacity:.8, interactive:false}).addTo(MAP.pl); L.polyline(l, {color:col, weight:4, interactive:false}).addTo(MAP.pl); });
+    var mk = L.marker([p.lat, p.lon], {icon:L.divIcon({className:'symk', html:mapSym({kind:'plane', type:'Bedding', dip:p.dip, dipdir:p.dipdir}, true).replace(/stroke="#111111"/g, 'stroke="' + col + '"'), iconSize:[48,48], iconAnchor:[24,24]}), zIndexOffset:800});
+    mk.on('click', function(e){ L.DomEvent.stop(e); if (DR){ addDrawPoint(e.latlng); return; } planeSheet(p); }); mk.bindTooltip(esc((p.name || 'Plane') + ' ' + fmtPlane(p)) + (p.busy ? ' · working out trace…' : '')); mk.addTo(MAP.pl); }); }
+function renderPlaneList(){ var el = $('planeList'); if (!el) return;
+  el.innerHTML = state.planes.slice().reverse().map(function(p){ var info = [p.z0 != null && isFinite(p.z0) ? 'at ' + Math.round(p.z0) + ' m' : 'no elevation', p.trace ? (p.trace.length ? 'ground trace' : 'misses the ground') : 'contours only', p.busy ? 'working…' : null].filter(Boolean).join(' · ');
+    return '<li class="prow"><input type="checkbox" aria-label="Show on map" data-pshow="' + esc(p.id) + '"' + (p.show ? ' checked' : '') + '><button type="button" class="rec" data-pid="' + esc(p.id) + '"><i class="sw" style="background:' + esc(p.color) + '"></i><span class="min0"><span class="t">' + esc(p.name || 'Plane') + '</span><span class="m">' + esc(info) + '</span></span><span class="v">' + fmtPlane(p) + '</span></button></li>'; }).join('')
+    || '<li class="muted small">No saved planes. Open a plane reading and tap <b>Project on map</b>, or use <b>Project a plane</b>.</li>'; }
+
+/* sheet */
+function newPlaneFrom(r){ var pos = r && r.lat != null ? r : (S.gps ? {lat:S.gps.lat, lon:S.gps.lon} : MAP.m ? {lat:MAP.m.getCenter().lat, lon:MAP.m.getCenter().lng} : (state.ui.mapView ? {lat:state.ui.mapView[0], lon:state.ui.mapView[1]} : {}));
+  return {id:uid(), name: r ? [r.type, r.station].filter(Boolean).join(' ') : '', dip: r ? r.dip : null, dipdir: r ? r.dipdir : null, lat: pos.lat, lon: pos.lon, z0:null, zSrc:'terrain',
+    color: PLANE_COLS[state.planes.length % PLANE_COLS.length], interval:10, extent:1000, show:true, showNet:true, recId: r ? r.id : null, trace:null, t:new Date().toISOString()}; }
+function planeSheet(p, isNew){
+  var html = '<label class="f">Name<input type="text" id="pName" value="' + esc(p.name || '') + '" placeholder="e.g. Main contact, ST-004 bedding" autocomplete="off"></label>'
+   + '<div class="grid2"><label class="f">Attitude (dip/dip dir)<input type="text" id="pAtt" value="' + (p.dip != null ? esc(fmtPlane(p)) : '') + '" placeholder="35/120 or N45E/30SE" autocomplete="off"></label><label class="f">Colour<input type="color" id="pCol" value="' + esc(p.color) + '" style="height:42px;padding:2px"></label></div>'
+   + '<p class="small muted" id="pAttOut" style="margin:0"></p>'
+   + '<div class="grid2"><label class="f">Latitude<input type="number" step="any" id="pLat" value="' + (p.lat != null ? (+p.lat).toFixed(6) : '') + '"></label><label class="f">Longitude<input type="number" step="any" id="pLon" value="' + (p.lon != null ? (+p.lon).toFixed(6) : '') + '"></label></div>'
+   + '<div class="row"><button class="btn" type="button" id="pHere">Use my position</button><button class="btn" type="button" id="pCentre">Use map centre</button></div>'
+   + '<div class="grid3"><label class="f">Elevation (m)<input type="number" step="any" id="pZ" value="' + (p.zSrc === 'typed' && p.z0 != null ? p.z0 : '') + '" placeholder="' + (p.z0 != null && isFinite(p.z0) ? Math.round(p.z0) + ' (terrain)' : 'from terrain') + '"></label><label class="f">Contour every (m)<input type="number" min="1" step="1" id="pIv" value="' + (p.interval || 10) + '"></label><label class="f">Reach (m)<input type="number" min="50" max="5000" step="50" id="pExt" value="' + (p.extent || 1000) + '"></label></div>'
+   + '<p class="small muted" style="margin:0">Leave the elevation empty to take it from the terrain model at the point. The plane is drawn as straight, so it is a guide to where the surface should crop out, not a mapped contact.</p>'
+   + '<label class="row small"><input type="checkbox" id="pShow"' + (p.show ? ' checked' : '') + '> Show on map</label>'
+   + '<label class="row small"><input type="checkbox" id="pNet"' + (p.showNet ? ' checked' : '') + '> Show on stereonet</label>'
+   + '<label class="row small"><input type="checkbox" id="pCont"' + (p.contours !== false ? ' checked' : '') + '> Structure contours</label>'
+   + (p.trace && p.trace.length ? '<p class="small" style="margin:0">Ground trace: ' + p.trace.length + ' line' + (p.trace.length > 1 ? 's' : '') + ', ' + fmtDist(p.trace.reduce(function(s, l){ return s + lengthOf(l); }, 0)) + '.</p>' : '')
+   + '<div class="row">' + (isNew ? '' : '<button class="btn" type="button" id="pTrace">Redo ground trace</button><button class="btn" type="button" id="pLine">Save trace as a contact</button><button class="btn" type="button" id="pZoom">Zoom to it</button>') + '</div>'
+   + '<div class="acts">' + (isNew ? '' : '<button class="btn danger" type="button" id="pDel">Delete</button>') + '<button class="btn" type="button" id="pCancel">Cancel</button><button class="btn primary" type="button" id="pSave">' + (isNew ? 'Save and project' : 'Save') + '</button></div>';
+  openSheet(isNew ? 'Project a plane' : 'Projected plane', html, function(){
+    function att(){ var a = GM.parseAttitude($('pAtt').value); $('pAttOut').textContent = $('pAtt').value.trim() ? (a ? 'Strike ' + pad3(a.strike) + ' (RHR), dips ' + Math.round(a.dip) + '° toward ' + pad3(a.dipdir) + '. Contours every ' + ($('pIv').value || 10) + ' m are ' + (a.dip > 0.5 && a.dip < 89.5 ? fmtDist((+$('pIv').value || 10)/Math.tan(a.dip*GM.D)) + ' apart.' : 'not drawn for this dip.') : 'Not read. Use 35/120 or N45E/30SE.') : ''; return a; }
+    $('pAtt').oninput = att; $('pIv').oninput = att; att();
+    $('pHere').onclick = function(){ if (!S.gps){ startGPS(); toast('Waiting for GPS…'); return; } $('pLat').value = S.gps.lat.toFixed(6); $('pLon').value = S.gps.lon.toFixed(6); };
+    $('pCentre').onclick = function(){ var c = MAP.m ? MAP.m.getCenter() : null; if (!c){ toast('Open the map first'); return; } $('pLat').value = c.lat.toFixed(6); $('pLon').value = c.lng.toFixed(6); };
+    $('pCancel').onclick = closeSheet;
+    if ($('pZoom')) $('pZoom').onclick = function(){ closeSheet(); zoomPlane(p); };
+    if ($('pTrace')) $('pTrace').onclick = function(){ closeSheet(); p.trace = null; computeTrace(p); };
+    if ($('pLine')) $('pLine').onclick = function(){ if (!p.trace || !p.trace.length){ toast('Work out the ground trace first'); return; }
+      p.trace.forEach(function(l){ state.features.push({id:uid(), geom:'line', coords:l, kind:'Contact', sub:'inferred', side:'right', name:(p.name || 'Projected') + ' ' + fmtPlane(p), note:'Projected from ' + fmtPlane(p) + ' with the terrain model', src:'user', t:new Date().toISOString()}); });
+      persist(); closeSheet(); renderMapData(); toast('Added ' + p.trace.length + ' inferred contact line' + (p.trace.length > 1 ? 's' : '') + '. Reshape them to fit what you see.'); };
+    if ($('pDel')) $('pDel').onclick = function(){ var b = $('pDel'); if (b.dataset.sure){ state.planes = state.planes.filter(function(x){ return x.id !== p.id; }); persist(); closeSheet(); renderPlanes(); renderPlaneList(); if (lastA) drawNet(lastA); toast('Deleted'); } else { b.dataset.sure = '1'; b.textContent = 'Tap again to delete'; } };
+    $('pSave').onclick = function(){ var a = att(), la = parseFloat($('pLat').value), lo = parseFloat($('pLon').value), z = parseFloat($('pZ').value);
+      if (!a){ toast('Type the attitude as 35/120 or N45E/30SE'); return; } if (!isFinite(la) || !isFinite(lo)){ toast('The plane needs a latitude and longitude'); return; }
+      var moved = !isNew && (a.dip !== p.dip || a.dipdir !== p.dipdir || la !== p.lat || lo !== p.lon || (+$('pExt').value || 1000) !== p.extent || (isFinite(z) ? z : null) !== (p.zSrc === 'typed' ? p.z0 : null));
+      p.name = $('pName').value.trim(); p.dip = a.dip; p.dipdir = a.dipdir; p.lat = la; p.lon = lo; p.color = $('pCol').value; p.interval = Math.max(1, +$('pIv').value || 10); p.extent = GM.clamp(+$('pExt').value || 1000, 50, 5000);
+      p.show = $('pShow').checked; p.showNet = $('pNet').checked; p.contours = $('pCont').checked;
+      if (isFinite(z)){ p.z0 = z; p.zSrc = 'typed'; } else if (p.zSrc === 'typed'){ p.z0 = null; p.zSrc = 'terrain'; }
+      if (isNew) state.planes.push(p); if (moved) p.trace = null; persist(); closeSheet();
+      var go = function(){ zoomPlane(p); if (!p.trace) computeTrace(p); };
+      if (state.ui.tab !== 'map'){ showTab('map'); setTimeout(go, 400); } else go();
+      renderPlaneList(); if (lastA) drawNet(lastA); toast(isNew ? 'Plane saved' : 'Updated'); }; }); }
+function zoomPlane(p){ if (!MAP.m) return; var d = p.extent/MLAT, e = p.extent/(MLON*Math.cos(p.lat*GM.D)); MAP.m.fitBounds([[p.lat - d, p.lon - e], [p.lat + d, p.lon + e]]); renderPlanes(); }
+function planeFeatures(){ return state.planes.map(function(p){ var a = p.dipdir*GM.D, sx = Math.sin(a - Math.PI/2), sy = Math.cos(a - Math.PI/2), S1 = toLL(-sx*p.extent, -sy*p.extent, p), S2 = toLL(sx*p.extent, sy*p.extent, p);
+    var lines = [[S1, S2]].concat(p.trace || []).map(function(l){ return l.map(function(q){ return [+(+q[1]).toFixed(7), +(+q[0]).toFixed(7)]; }); });
+    return {type:'Feature', properties:{id:p.id, kind:'Projected plane', name:p.name || '', dip:p.dip, dipdir:p.dipdir, strike_rhr:+GM.strikeOf(p.dipdir).toFixed(1), elevation_m:p.z0, elevation_from:p.zSrc, origin_lat:p.lat, origin_lon:p.lon, note:'first line = strike line through the reading; others = ground trace'}, geometry:{type:'MultiLineString', coordinates:lines}}; }); }
+
 /* ---------- guide ---------- */
 var GUIDE = [
  {h:'Measuring with the phone', b:'<p>Plane: lay the back of the phone flat on the surface, any way round, and hold still until the bar turns green. Line: lay the long edge of the phone along the lineation, top end pointing down the plunge or up it (either works). Plane + line: measure the plane first, then the line on it; the app works out the rake and how far the line sits off the plane.</p><ul><li>Calibrate the compass at the start of each day and whenever readings jump: move the phone in a figure-of-eight, away from the hammer, vehicles, fences and magnetite-rich rock.</li><li>Check the phone against an analogue compass on a known bearing each day and note the difference.</li><li>Take several readings of each surface. Phone azimuths scatter more than a good analogue compass. In a test of about 350 paired readings, Steiner (2018) found a median difference of 13° and advised extra care with dips steeper than about 40°.</li><li>Dip comes from the accelerometer and is usually better than the dip direction, which comes from the magnetometer.</li><li>On rough or small surfaces, rest the phone on a notebook or clipboard laid on the surface. That also stops the camera bump tilting the phone.</li><li>Allmendinger et al. (2017) recommend redundancy: repeat readings, compare devices and keep an analogue check.</li></ul>'},
@@ -1884,6 +2022,7 @@ var GUIDE = [
  {h:'Rock strength in the field (ISRM)', b:'<div class="tablewrap"><table class="gt"><tr><th>Grade</th><th>UCS (MPa)</th><th>Field test</th></tr><tr><td>R6 Extremely strong</td><td class="n">&gt;250</td><td>Hammer only chips it</td></tr><tr><td>R5 Very strong</td><td class="n">100–250</td><td>Needs many hammer blows to break</td></tr><tr><td>R4 Strong</td><td class="n">50–100</td><td>Needs more than one blow to break</td></tr><tr><td>R3 Medium strong</td><td class="n">25–50</td><td>Knife cannot scrape it; one firm blow breaks it</td></tr><tr><td>R2 Weak</td><td class="n">5–25</td><td>Knife peels it with difficulty; hammer point dents it</td></tr><tr><td>R1 Very weak</td><td class="n">1–5</td><td>Crumbles under firm hammer-point blows; knife peels it</td></tr><tr><td>R0 Extremely weak</td><td class="n">0.25–1</td><td>Thumbnail dents it</td></tr></table></div><p>After the field estimates tabulated by Hoek et al. (1998).</p>'},
  {h:'Weathering grades', b:'<div class="tablewrap"><table class="gt"><tr><th>Grade</th><th>Description</th></tr><tr><td>I Fresh</td><td>No visible weathering; slight discolouration on main joints at most</td></tr><tr><td>II Slightly</td><td>Discolouration of the rock and joint surfaces</td></tr><tr><td>III Moderately</td><td>Less than half the rock decomposed to soil; fresh or discoloured core stones</td></tr><tr><td>IV Highly</td><td>More than half decomposed to soil</td></tr><tr><td>V Completely</td><td>All decomposed to soil; original fabric still visible</td></tr><tr><td>VI Residual soil</td><td>Fabric destroyed</td></tr></table></div>'},
  {h:'Mapping contacts and units', b:'<ul><li>Draw a line with <b>Map ▸ Draw contact or fault</b>: tap along it, or tick <b>Walk it</b> and walk the contact so a point is added every 10 m from GPS.</li><li>Line symbols follow common map practice: solid where observed, long dashes where approximate, short dashes where inferred, dots where concealed. Faults are red; thrust teeth and normal-fault ticks go on the hanging wall or downthrown side.</li><li>Draw rock units as areas. Points snap to nearby line points, so units can share the contacts you have drawn.</li><li>Draw an <b>Area to study</b> around an outcrop or domain and open its stereonet to see only the readings inside it.</li><li><b>Rule of Vs</b>: where a contact crosses a valley, it Vs upstream if it dips upstream or dips downstream more gently than the valley floor; it Vs downstream if it dips downstream more steeply than the valley floor; a vertical contact runs straight across.</li><li>A contact\'s trace on the map should follow the strike measured nearby on flat ground. Where it does not, check the dip and the topography.</li></ul>'},
+ {h:'Projecting a plane', b:'<ul><li>Open a plane reading and tap <b>Project on map</b>, or tap <b>Map ▸ Project a plane</b> and type an attitude. Save it to keep it; tick or untick it in <b>Projected planes</b> to show or hide it.</li><li><b>Strike line</b>: the solid line through the reading. <b>Structure contours</b>: dashed lines where the plane is 10 m (or your interval) lower or higher. Their spacing is the interval divided by tan(dip), so steep planes have close contours.</li><li><b>Ground trace</b>: with signal, the app loads a terrain model (mostly SRTM, about 30 m cells) and draws where the plane meets the ground. Use it to look for the same contact elsewhere and to check the rule of Vs.</li><li>A real contact is rarely a perfect plane. Treat the trace as a prediction; <b>Save trace as a contact</b> adds it as an inferred contact you can reshape in the field.</li></ul>'},
  {h:'Folds, faults and shear sense', b:'<ul><li><b>Interlimb angle</b> (Fleuty 1964): gentle 180–120°, open 120–70°, close 70–30°, tight 30–0°, isoclinal 0°.</li><li><b>Plunge</b>: sub-horizontal &lt;10°, gently 10–30°, moderately 30–60°, steeply 60–80°, sub-vertical &gt;80°.</li><li><b>On the net</b>: bedding poles around a fold fall on a great circle (π girdle); its pole is the fold axis. The intersection of the two limb planes (β) should agree with it and with measured hinge lines.</li><li><b>Parasitic folds</b> (Pumpelly\'s rule): Z folds on the left limb and S folds on the right limb of a synform, looking down the plunge; M folds near the hinge.</li><li><b>Shear sense</b>: S–C fabrics, σ and δ porphyroclasts, shear bands, mica fish, asymmetric folds, offset markers. Use slickenline steps only where accretion steps are clear.</li><li>Record fault planes with their slickenlines (Plane + line) so rake and sense can be read later.</li></ul>'},
  {h:'Outcrop description checklist', b:'<ul><li>Station, position and accuracy, photo with scale and north arrow</li><li>Exposure: in situ, subcrop or float; size</li><li>Rock name, fresh and weathered colour, grain size, texture, minerals with estimated %</li><li>Strength (R0–R6) and weathering (I–VI)</li><li>Fabric and structures: bedding, foliation, joints (spacing, aperture, infill), veins, faults</li><li>Alteration and mineralisation: style, minerals, intensity</li><li>Samples: ID, type, bag number, what it is for</li><li>Relationships: contacts, cross-cutting order, way-up</li></ul>'},
  {h:'Field kit and safety', b:'<ul><li>Hammer, hand lens (10×), dilute HCl dropper, magnet, knife or scratch tip, streak plate, grain-size card</li><li>Analogue compass for daily checks, spare battery, waterproof phone case</li><li>Notebook, pencil, sample bags, marker, flagging tape</li><li>PPE: safety glasses for hammering, hi-vis, boots, hat, sun protection</li><li>Water, food, first aid kit, satellite messenger or radio; leave your route and return time with someone</li><li>Stay back from loose faces and pit walls, keep out of shafts and old workings, and follow site access rules</li></ul>'},
@@ -1905,9 +2044,8 @@ function wire(){
   document.querySelectorAll('.tabs button').forEach(function(b){ b.onclick = function(){ showTab(b.dataset.v); }; });
   document.querySelectorAll('#modeSeg button').forEach(function(b){ b.onclick = function(){ setMode(b.dataset.mode); }; });
   $('typeChips').addEventListener('click', function(e){ var b = e.target.closest('.chip'); if (!b) return; if (activeKind() === 'line' && state.ui.mode === 'pl') state.ui.ltype = b.dataset.t; else state.ui.type = b.dataset.t; renderTypeChips(); persist(); });
-  $('btnStart').onclick = function(){ $('sensorBanner').hidden = true; startCompass(); };
   $('btnManual').onclick = function(){ recordSheet(null); };
-  $('btnRecord').onclick = function(){ var r = currentReading(); if (!r){ toast('No reading yet. Hold the phone on the surface.'); return; } recordFromPhone(r, false); };
+  $('btnRecord').onclick = function(){ if (!S.on){ $('sensorBanner').hidden = true; startCompass(); return; } var r = currentReading(); if (!r){ toast('No reading yet. Hold the phone on the surface.'); return; } recordFromPhone(r, false); };
   $('btnUndo').onclick = function(){ var r = state.recs.filter(function(x){ return x.src !== 'example'; }).pop(); if (!r) return; state.recs = state.recs.filter(function(x){ return x !== r; }); if (r.photo) PhotoDB.del(r.id); persist(); renderRecent(); toast('Removed ' + describe(r)); $('btnUndo').hidden = true; };
   $('station').value = state.station; $('station').onchange = function(){ state.station = $('station').value.trim() || state.station; persist(); };
   $('btnNextSt').onclick = function(){ state.station = nextStation($('station').value.trim() || state.station); $('station').value = state.station; persist(); toast('Station ' + state.station); };
@@ -1955,6 +2093,9 @@ function wire(){
   $('mapShowRd').onchange = renderReadings;
   $('featList').addEventListener('click', function(e){ var b = e.target.closest('[data-fid]'); if (!b) return; var f = state.features.find(function(x){ return x.id === b.dataset.fid; }); if (!f) return; if (MAP.m) MAP.m.fitBounds(L.latLngBounds(f.coords).pad(0.3), {maxZoom:18}); featureSheet(f); });
   $('mapOverlay').onclick = overlaySheet;
+  $('planeNew').onclick = function(){ var last = state.recs.slice().reverse().find(function(r){ return r.dip != null && r.lat != null && r.src !== 'example'; }); planeSheet(newPlaneFrom(last || null), true); };
+  $('planeList').addEventListener('click', function(e){ var b = e.target.closest('[data-pid]'); if (!b) return; var p = planeById(b.dataset.pid); if (p){ zoomPlane(p); planeSheet(p); } });
+  $('planeList').addEventListener('change', function(e){ var c = e.target.closest('[data-pshow]'); if (!c) return; var p = planeById(c.dataset.pshow); if (!p) return; p.show = c.checked; persist(); renderPlanes(); if (p.show){ zoomPlane(p); if (!p.trace) computeTrace(p, true); } });
   $('mapExGeo').onclick = function(){ saveFile('outcrop_map_' + stamp() + '.json', mapGeoJSON(), 'application/geo+json'); };
   $('mapExKml').onclick = function(){ saveFile('outcrop_map_' + stamp() + '.kml', mapKML(), 'application/vnd.google-earth.kml+xml'); };
   $('mapImport').onchange = function(){ var f = $('mapImport').files[0]; if (!f) return; var fr = new FileReader(); fr.onload = function(){ try{ var r = importMapFile(String(fr.result), f.name); toast('Added ' + r.features + ' lines/units' + (r.readings ? ' and ' + r.readings + ' readings' : '')); if (MAP.m) fitData(); }catch(e){ toast('Could not read that file'); } }; fr.readAsText(f); $('mapImport').value = ''; };
