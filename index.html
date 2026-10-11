@@ -82,6 +82,17 @@ a.btn{text-decoration:none;color:var(--ink)}
 .dialwrap{width:100%;max-width:220px;aspect-ratio:1;margin:0 auto}
 @media (max-width:460px){.dialwrap{max-width:180px}.readout .big{font-size:56px}}
 .recrow{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.savedbar{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:color-mix(in srgb,var(--good) 14%,var(--surface));border:2px solid var(--good);border-radius:10px;padding:10px}
+.savedmsg{display:flex;gap:10px;align-items:center;flex-basis:100%;color:var(--good)}
+.savedmsg b{display:block;font-family:var(--f-disp);font-size:22px;letter-spacing:.02em}
+.savedmsg .small{display:block;color:var(--ink)}
+.savedbar #btnNext{flex:1 1 160px;background:var(--good);border-color:var(--good);font-size:19px;white-space:nowrap;min-height:54px}
+.savedbar .btn{min-height:48px}
+.instrument.frozen .readout .big{color:var(--good)}
+.instrument.frozen #dial{opacity:.85}
+.rec.fresh{border-color:var(--good);box-shadow:0 0 0 2px var(--good)}
+.autobar{height:4px;background:var(--good);border-radius:2px;flex-basis:100%;transform-origin:left;animation:autobar var(--auto,2.5s) linear forwards}
+@keyframes autobar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .recrow #btnRecord{flex:1 1 200px}
 #btnRecord.steady{box-shadow:0 0 0 3px var(--good)}
 .plab span{display:inline-block;transform:translate(4px,-50%);font:600 12px var(--f-mono);white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}
@@ -884,7 +895,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <span class="small muted" id="northLbl">True north · decl 0.0°</span>
       </div>
 
-      <div class="card instrument">
+      <div class="card instrument" id="instCard">
         <div class="dialwrap"><canvas id="dial" aria-label="Compass dial showing the current reading"></canvas></div>
         <div class="readout min0">
           <div class="big"><span id="rdA">--</span><span class="sep">/</span><span id="rdB">---</span></div>
@@ -892,7 +903,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div class="sub" id="rdSub">Strike — (right-hand rule)</div>
           <div class="steady" id="steady"><div class="bar"><i id="steadyFill"></i></div><span id="steadyTxt">Compass not started</span></div>
         </div>
-        <div class="recrow">
+        <div class="savedbar" id="savedBar" hidden role="status" aria-live="polite">
+          <div class="savedmsg"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span><b id="savedTitle">Saved</b><span class="small" id="savedSub"></span></span></div>
+          <button class="btn primary big" id="btnNext" type="button">Measure next</button>
+          <button class="btn" id="btnSavedEdit" type="button">Add details</button>
+          <button class="btn danger" id="btnSavedUndo" type="button">Undo</button>
+        </div>
+        <div class="recrow" id="recRow">
           <button class="btn primary big" id="btnRecord" type="button">Start compass</button>
           <button class="btn" id="btnManual" type="button">Type it in</button>
           <label class="row small" style="gap:6px;cursor:pointer;flex-basis:100%"><input type="checkbox" id="autoRec"> Record by itself when held steady</label>
@@ -1338,7 +1355,7 @@ function recBtn(r){ var b = $('btnRecord'); if (!S.on){ b.disabled = false; b.cl
   if (!r){ b.disabled = true; b.textContent = 'Waiting for the sensors…'; return; } b.disabled = false;
   var pl = state.ui.mode === 'pl' && !S.pendingPlane ? 'plane ' : state.ui.mode === 'pl' ? 'line ' : '';
   b.textContent = 'Record ' + pl + (r.kind === 'line' ? fmtLine(r.trend, r.plunge) : fmtPlane(r)); }
-function updateLive(){ var r = S.lastT ? currentReading() : null; renderReadout(r); drawDial(r);
+function updateLive(){ if (S.frozen) return; var r = S.lastT ? currentReading() : null; renderReadout(r); drawDial(r);
   var stEl = $('steady'), fill = $('steadyFill'), txt = $('steadyTxt');
   recBtn(r);
   if (!r){ fill.style.width = '0'; txt.textContent = S.on ? 'Waiting for the sensors…' : 'Compass not started'; return; }
@@ -1349,7 +1366,7 @@ function updateLive(){ var r = S.lastT ? currentReading() : null; renderReadout(
   var now = performance.now();
   if (steady){ if (!S.steadySince) S.steadySince = now; } else S.steadySince = 0;
   if (!S.armed && S.lastAuto){ var v = activeKind() === 'line' ? GM.lineVec(r.trend, r.plunge) : GM.normalUp(r.dip, r.dipdir); if (GM.axAngle(v, S.lastAuto) > 12) S.armed = true; }
-  if (state.set.autoRec && steady && S.armed && S.steadySince && now - S.steadySince > state.set.hold*1000){ S.armed = false; S.steadySince = 0; recordFromPhone(r, true); } }
+  if (state.set.autoRec && steady && S.armed && S.steadySince && now - S.steadySince > state.set.hold*1000){ S.armed = false; S.steadySince = 0; S.lastAuto = activeKind() === 'line' ? GM.lineVec(r.trend, r.plunge) : GM.normalUp(r.dip, r.dipdir); recordFromPhone(r, true); } }
 function renderReadout(r){ var k = activeKind();
   if (k === 'line'){ $('rdCap').textContent = 'plunge → trend (' + northWord() + ')';
     if (!r){ $('rdA').textContent = '--'; $('rdB').textContent = '---'; $('rdSub').textContent = 'Lay the long edge of the phone along the line'; return; }
@@ -1391,7 +1408,22 @@ function recordFromPhone(r, auto){ var k = activeKind();
     S.pendingPlane = null; updatePlStep(); if (rk.misfit > 15) toast('Line is ' + Math.round(rk.misfit) + '° off the plane. Check both.'); }
   else if (r.kind === 'plane') Object.assign(rec, {kind:'plane', type:state.ui.type, dip:+r.dip.toFixed(1), dipdir:+r.dipdir.toFixed(1)});
   else Object.assign(rec, {kind:'line', type:state.ui.type, trend:+r.trend.toFixed(1), plunge:+r.plunge.toFixed(1)});
-  addRecord(rec); buzz(); if (auto) toast('Recorded ' + describe(rec)); }
+  addRecord(rec); buzz(); freezeOn(rec, r, auto); }
+function freezeOn(rec, r, auto){ S.frozen = {id:rec.id}; S.lastAuto = rec.kind === 'line' ? GM.lineVec(rec.trend, rec.plunge) : GM.normalUp(rec.dip, rec.dipdir); var card = $('instCard'); card.classList.add('frozen');
+  try{ if (navigator.vibrate) navigator.vibrate([60, 60, 60]); }catch(e){}
+  if (rec.kind === 'line'){ $('rdA').textContent = pad2(rec.plunge); $('rdB').textContent = pad3(rec.trend); } else { $('rdA').textContent = pad2(rec.dip); $('rdB').textContent = pad3(rec.dipdir); }
+  drawDial(rec.kind === 'line' ? {kind:'line', trend:rec.trend, plunge:rec.plunge} : {kind:'plane', dip:rec.dip, dipdir:rec.dipdir});
+  var mine = state.recs.filter(function(x){ return x.src !== 'example'; }).length;
+  $('savedTitle').textContent = 'Saved ' + describe(rec);
+  $('savedSub').textContent = 'Reading ' + mine + ' · ' + rec.station + (rec.lat != null ? ' · GPS ±' + Math.round(rec.acc || 0) + ' m' : ' · no GPS fix') + (rec.spread != null ? ' · held to ±' + rec.spread + '°' : '');
+  $('steadyTxt').textContent = 'Reading held. The compass waits until you tap Measure next.'; $('steadyFill').style.width = '100%';
+  $('recRow').hidden = true; $('savedBar').hidden = false;
+  var old = document.querySelector('#savedBar .autobar'); if (old) old.remove(); clearTimeout(S.autoT);
+  if (auto){ var bar = document.createElement('div'); bar.className = 'autobar'; $('savedBar').appendChild(bar); S.autoT = setTimeout(unfreeze, 2500); }
+  var row = document.querySelector('#recent .rec[data-id="' + rec.id + '"]'); if (row) row.classList.add('fresh'); }
+function unfreeze(){ clearTimeout(S.autoT); if (!S.frozen) return; S.frozen = null; S.buf = []; S.steadySince = 0; S.armed = false;
+  $('instCard').classList.remove('frozen'); $('savedBar').hidden = true; $('recRow').hidden = false; var b = document.querySelector('#savedBar .autobar'); if (b) b.remove();
+  document.querySelectorAll('#recent .rec.fresh').forEach(function(x){ x.classList.remove('fresh'); }); updateLive(); }
 function buzz(){ try{ if (navigator.vibrate) navigator.vibrate(60); }catch(e){} }
 function addRecord(rec){ if (pendingPhoto){ rec.photo = true; PhotoDB.put(rec.id, pendingPhoto); pendingPhoto = null; $('photoLbl').textContent = 'Add photo'; }
   state.seq++; state.recs.push(rec); state.station = rec.station; persist(); $('note').value = ''; renderRecent(); $('btnUndo').hidden = false; }
@@ -1412,7 +1444,7 @@ function updatePlStep(){ var el = $('plStep'); if (state.ui.mode !== 'pl'){ el.h
 function renderTypeChips(){ var line = activeKind() === 'line', list = line ? LINES : PLANES, cur = line && state.ui.mode === 'pl' ? state.ui.ltype : state.ui.type;
   if (list.indexOf(cur) < 0){ cur = list[0]; if (line && state.ui.mode === 'pl') state.ui.ltype = cur; else state.ui.type = cur; }
   $('typeChips').innerHTML = list.map(function(t){ return '<button type="button" class="chip' + (line ? ' ln' : '') + '" aria-pressed="' + (t === cur) + '" data-t="' + esc(t) + '">' + esc(t) + '</button>'; }).join(''); }
-function setMode(m){ state.ui.mode = m; S.pendingPlane = null; document.querySelectorAll('#modeSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.mode === m); });
+function setMode(m){ if (S.frozen) unfreeze(); state.ui.mode = m; S.pendingPlane = null; document.querySelectorAll('#modeSeg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.mode === m); });
   if (m === 'pl' && state.ui.type === 'Bedding') state.ui.type = 'Fault';
   if (m === 'line' && !isLineType(state.ui.type)) state.ui.type = 'Lineation'; if (m !== 'line' && isLineType(state.ui.type)) state.ui.type = 'Bedding';
   updatePlStep(); renderTypeChips(); persist(); updateLive(); }
@@ -2467,6 +2499,10 @@ function wire(){
   $('typeChips').addEventListener('click', function(e){ var b = e.target.closest('.chip'); if (!b) return; if (activeKind() === 'line' && state.ui.mode === 'pl') state.ui.ltype = b.dataset.t; else state.ui.type = b.dataset.t; renderTypeChips(); persist(); });
   $('btnManual').onclick = function(){ recordSheet(null); };
   $('btnRecord').onclick = function(){ if (!S.on){ $('sensorBanner').hidden = true; startCompass(); return; } var r = currentReading(); if (!r){ toast('No reading yet. Hold the phone on the surface.'); return; } recordFromPhone(r, false); };
+  $('btnNext').onclick = unfreeze;
+  $('btnSavedEdit').onclick = function(){ var r = S.frozen && state.recs.find(function(x){ return x.id === S.frozen.id; }); clearTimeout(S.autoT); if (r) recordSheet(r); };
+  $('btnSavedUndo').onclick = function(){ var id = S.frozen && S.frozen.id, r = state.recs.find(function(x){ return x.id === id; }); if (!r) { unfreeze(); return; }
+    state.recs = state.recs.filter(function(x){ return x !== r; }); if (r.photo) PhotoDB.del(r.id); persist(); renderRecent(); unfreeze(); toast('Removed ' + describe(r) + '. Not saved.'); };
   $('btnUndo').onclick = function(){ var r = state.recs.filter(function(x){ return x.src !== 'example'; }).pop(); if (!r) return; state.recs = state.recs.filter(function(x){ return x !== r; }); if (r.photo) PhotoDB.del(r.id); persist(); renderRecent(); toast('Removed ' + describe(r)); $('btnUndo').hidden = true; };
   $('station').value = state.station; $('station').onchange = function(){ state.station = $('station').value.trim() || state.station; persist(); };
   $('btnNextSt').onclick = function(){ state.station = nextStation($('station').value.trim() || state.station); $('station').value = state.station; persist(); toast('Station ' + state.station); };
