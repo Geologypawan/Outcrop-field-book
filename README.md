@@ -28,6 +28,13 @@ In the field
   plane). Shows the strike line, structure contours and, with signal, the ground trace
   from a terrain model. Saved planes can be shown or hidden from the list at any time,
   appear on the stereonet, and the trace can be saved as an inferred contact.
+- WA layers (layers button on the map): GSWA bedrock geology 1:100k / 1:500k / 1:2.5M,
+  structures, Cenozoic geology, regolith, scanned 1:100k and 1:250k map sheets, MINEDEX,
+  tenements, open-file drillholes, WAMEX, magnetics, radiometrics, gravity. Tap the map
+  to see the unit, deposit or tenement details. Western Australia only; needs signal.
+- Google Earth: Log > Google Earth (KMZ) saves strike/dip symbols with dip labels
+  (lineations as arrows with plunge labels), coloured by structure, in folders.
+  Map > Export map to Google Earth adds contacts, faults, units and projected planes.
 - Interpret: stereonet, density, sets, fold axis, rose; an area drawn on the map can
   be opened as its own stereonet.
 - Readings and map work stay on the phone. Use Log > Backup at the end of each day.
