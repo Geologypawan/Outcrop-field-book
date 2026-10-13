@@ -847,6 +847,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 .frow .sw{width:34px;height:22px}
 .frow svg{width:34px}
 .drawtools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.glogo{font-family:'Product Sans',Arial,sans-serif;font-weight:700;letter-spacing:-.01em}
 .mapbtn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .mapbtn.wide{width:auto;padding:0 10px;display:flex;gap:5px;font-weight:700;font-size:14px}
 .mapbtn .cnt:empty{display:none}
@@ -1247,7 +1248,7 @@ var PLANES = ['Bedding','Foliation','Cleavage','Joint','Fault','Vein','Shear zon
 var LINES = ['Lineation','Fold axis','Slickenline','Intersection','Mineral lineation','Stretching lineation'];
 var ROCKS = ['Sandstone','Siltstone','Mudstone','Shale','Conglomerate','Limestone','Dolomite','Chert','BIF','Quartzite','Slate','Phyllite','Schist','Gneiss','Marble','Amphibolite','Greenstone','Granite','Granodiorite','Diorite','Gabbro','Dolerite','Basalt','Andesite','Rhyolite','Komatiite','Peridotite','Serpentinite','Tuff','Diamictite'];
 var inViewer = !!(window.claude && typeof window.claude.use === 'function');
-var APP_VERSION = '1.8 · 11 Oct 2026';
+var APP_VERSION = '1.9 · 13 Oct 2026';
 function checkUpdate(btn, quiet){ var out = $('updOut');
   function say(t){ if (out) out.textContent = t; else if (!quiet) toast(t); }
   if (inViewer){ say('This copy inside Claude updates when Claude publishes a new version. The installed app has its own update check.'); return; }
@@ -1517,11 +1518,12 @@ function settingsSheet(){ var s = state.set;
    + '<div class="grid2"><label class="f">Shift easting (m)<input type="number" id="sOffE" step="0.1" value="' + s.offE + '"></label><label class="f">Shift northing (m)<input type="number" id="sOffN" step="0.1" value="' + s.offN + '"></label></div>'
    + '<p class="small muted" style="margin:0">A constant shift added to exported eastings/northings, for matching a local datum measured on known stations.</p>'
    + '<div class="grid2"><label class="f">Average over (s)<input type="number" id="sWin" min="0.3" max="5" step="0.1" value="' + s.win + '"></label><label class="f">Hold steady for (s) before auto-record<input type="number" id="sHold" min="0.5" max="10" step="0.5" value="' + s.hold + '"></label></div>'
+   + '<div class="row-between"><span class="small">Google maps key: <b>' + (s.gkey ? 'saved' : 'not set') + '</b></span><button class="btn" id="sGkey" type="button">' + (s.gkey ? 'Change' : 'Add') + ' Google key</button></div>'
    + '<label class="f">Walk-it spacing (m)<input type="number" id="sWalk" min="2" max="200" step="1" value="' + (s.walkStep || 10) + '"></label>'
    + '<details class="tool"><summary>Install on your phone</summary><div class="in small"><p style="margin:0">The compass and GPS need the app open in the phone\'s own browser. Put the app folder (index.html, sw.js, manifest.webmanifest, icon) on any https host, for example GitHub Pages or Netlify Drop, open the link in Chrome (Android) or Safari (iPhone), then choose <b>Add to Home screen</b>. After the first visit it works offline. Readings stay on the phone, so export a backup after each day.</p></div></details>'
    + '<h3>App</h3><div class="row-between"><span class="small">Version <b class="mono">' + APP_VERSION + '</b></span><button class="btn primary" id="sUpd" type="button">Check for updates</button></div><p class="small muted" id="updOut" style="margin:0">The app also updates by itself when you open it with signal. Updating never removes your readings, maps or photos.</p>'
    + '<div class="acts"><button class="btn" id="sClose" type="button">Close</button><button class="btn primary" id="sSave" type="button">Save</button></div>';
-  openSheet('Settings', html, function(){ $('sNorth').value = s.north; $('sProj').value = s.proj; $('sClose').onclick = closeSheet; $('sUpd').onclick = function(){ checkUpdate($('sUpd')); };
+  openSheet('Settings', html, function(){ $('sNorth').value = s.north; $('sProj').value = s.proj; $('sClose').onclick = closeSheet; $('sGkey').onclick = function(){ closeSheet(); googleKeySheet(BASES[state.ui.base] && BASES[state.ui.base].google ? state.ui.base : 'gsat'); }; $('sUpd').onclick = function(){ checkUpdate($('sUpd')); };
     $('sSave').onclick = function(){ s.north = $('sNorth').value; s.decl = parseFloat($('sDecl').value) || 0; s.proj = $('sProj').value; s.offE = parseFloat($('sOffE').value) || 0; s.offN = parseFloat($('sOffN').value) || 0;
       s.win = GM.clamp(parseFloat($('sWin').value) || 1, 0.3, 5); s.hold = GM.clamp(parseFloat($('sHold').value) || 2, 0.5, 10); s.walkStep = GM.clamp(parseFloat($('sWalk').value) || 10, 2, 200); persist(); setNorthLabel(); closeSheet(); refreshAll(); toast('Settings saved'); }; }); }
 
@@ -1717,6 +1719,10 @@ var BASES = {
   osm:{name:'OpenStreetMap', url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', max:19, attr:'© OpenStreetMap contributors'},
   topo:{name:'Topographic', url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', max:17, attr:'© OpenStreetMap contributors, SRTM · style © OpenTopoMap (CC-BY-SA)'},
   esritopo:{name:'Esri topographic', url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', max:19, attr:'© Esri and contributors'},
+  gsat:{name:'Google satellite', google:{mapType:'satellite'}, max:21},
+  ghyb:{name:'Google satellite + labels', google:{mapType:'satellite', layerTypes:['layerRoadmap']}, max:21},
+  groad:{name:'Google map', google:{mapType:'roadmap'}, max:21},
+  gterr:{name:'Google terrain', google:{mapType:'terrain', layerTypes:['layerRoadmap']}, max:20},
   none:{name:'No base map', url:null}
 };
 var LINE_KINDS = ['Contact','Fault','Thrust fault','Normal fault','Anticline trace','Syncline trace','Dyke / vein','Other line'];
@@ -1745,13 +1751,40 @@ function initMap(){ if (MAP.m){ MAP.m.invalidateSize(); renderMapData(); return;
   MAP.ovL = L.layerGroup().addTo(m); MAP.ft = L.layerGroup().addTo(m); MAP.deco = L.layerGroup().addTo(m); MAP.rd = L.layerGroup().addTo(m); MAP.gpsL = L.layerGroup().addTo(m); MAP.dr = L.layerGroup().addTo(m); MAP.editL = L.layerGroup().addTo(m); MAP.pl = L.layerGroup().addTo(m);
   setBase(state.ui.base || 'sat'); applyWA(); renderVectors();
   var v = state.ui.mapView; if (v && isFinite(v[0])) m.setView([v[0], v[1]], v[2]); else fitData();
+  m.on('moveend', googleAttribution);
   m.on('moveend', function(){ var c = m.getCenter(); state.ui.mapView = [c.lat, c.lng, m.getZoom()]; $('gmLink').href = gmapsUrl(c.lat, c.lng); persist(); });
   m.on('zoomend', function(){ drawDeco(); renderReadings(); renderPlanes(); }); m.on('moveend', drawDeco);
   m.on('click', function(e){ if (DR) addDrawPoint(e.latlng); else if (!EDIT) waIdentify(e.latlng); });
   var c0 = m.getCenter(); $('gmLink').href = gmapsUrl(c0.lat, c0.lng);
   renderOverlays(); renderMapData(); if (S.gps) onGpsFix(); }
-function setBase(key){ if (!BASES[key]) key = 'sat'; state.ui.base = key; $('baseSel').value = key; if (!MAP.m) return; var b = BASES[key];
-  if (MAP.base){ MAP.m.removeLayer(MAP.base); MAP.base = null; } if (MAP.label){ MAP.m.removeLayer(MAP.label); MAP.label = null; }
+function googleSession(kind){ var key = (state.set.gkey || '').trim(), b = BASES[kind], cacheKey = kind + '|' + key.slice(-6), c = (state.ui.gsess || {})[cacheKey];
+  if (c && c.expiry*1000 > Date.now() + 3600e3) return Promise.resolve(c.session);
+  var body = Object.assign({language:'en-AU', region:'AU'}, b.google);
+  return fetch('https://tile.googleapis.com/v1/createSession?key=' + encodeURIComponent(key), {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+    .then(function(r){ return r.json().then(function(d){ if (!r.ok || !d.session) throw new Error((d.error && d.error.message) || ('Google said ' + r.status)); return d; }); })
+    .then(function(d){ state.ui.gsess = state.ui.gsess || {}; state.ui.gsess[cacheKey] = {session:d.session, expiry:+d.expiry}; persist(); return d.session; }); }
+var gAttrT = null;
+function googleAttribution(){ if (!MAP.base || !MAP.base._gsess || !MAP.m) return; clearTimeout(gAttrT); gAttrT = setTimeout(function(){ var bb = MAP.m.getBounds(), cl = function(v, m){ return Math.max(-m + 0.0001, Math.min(m - 0.0001, v)); };
+  fetch('https://tile.googleapis.com/tile/v1/viewport?session=' + MAP.base._gsess + '&key=' + encodeURIComponent(state.set.gkey) + '&zoom=' + MAP.m.getZoom() + '&north=' + cl(bb.getNorth(), 90) + '&south=' + cl(bb.getSouth(), 90) + '&east=' + cl(bb.getEast(), 180) + '&west=' + cl(bb.getWest(), 180))
+    .then(function(r){ return r.json(); }).then(function(d){ if (!MAP.base || !MAP.base._gsess) return; var a = '<b class="glogo">Google</b> ' + esc(d.copyright || 'Map data © Google'); if (MAP.m.attributionControl){ MAP.m.attributionControl.removeAttribution(MAP.base._gattr || ''); MAP.m.attributionControl.addAttribution(a); MAP.base._gattr = a; } }).catch(function(){}); }, 400); }
+function googleKeySheet(kind){ var html = '<p style="margin:0">Google satellite and Google map tiles need your own <b>Google Maps API key</b>. Google does not allow apps to use its map tiles without one, and copies made without a key get blocked.</p>'
+  + '<ol class="small" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px"><li>Open <a href="https://console.cloud.google.com/google/maps-apis" target="_blank" rel="noopener">Google Cloud console ▸ Google Maps Platform</a> and sign in with your Google account.</li><li>Create a project and add a billing account (Google gives a free monthly allowance; check its pricing page).</li><li>Enable <b>Map Tiles API</b>.</li><li>Under <b>Keys &amp; Credentials</b>, create an API key. Restrict it to <b>Map Tiles API</b> and to the website <span class="mono">geologypawan.github.io/*</span> so nobody else can use it.</li><li>Paste the key below.</li></ol>'
+  + '<label class="f">Google Maps API key<input type="text" id="gKey" autocomplete="off" spellcheck="false" value="' + esc(state.set.gkey || '') + '" placeholder="AIza…"></label>'
+  + '<p class="small muted" style="margin:0" id="gOut">The key stays on this phone. Google tiles are not kept for offline use (Google does not allow it); the Esri satellite view still works offline.</p>'
+  + '<div class="acts">' + (state.set.gkey ? '<button class="btn danger" id="gClear" type="button">Remove key</button>' : '') + '<button class="btn" id="gCancel" type="button">Cancel</button><button class="btn primary" id="gSave" type="button">Save and show Google ' + (kind === 'groad' ? 'map' : kind === 'gterr' ? 'terrain' : 'satellite') + '</button></div>';
+  openSheet('Google maps', html, function(){ $('gCancel').onclick = closeSheet;
+    if ($('gClear')) $('gClear').onclick = function(){ state.set.gkey = ''; state.ui.gsess = {}; persist(); closeSheet(); if (BASES[state.ui.base].google) setBase('sat'); toast('Key removed'); };
+    $('gSave').onclick = function(){ var k = $('gKey').value.trim(); if (!/^AIza[\w-]{20,}$/.test(k)){ $('gOut').textContent = 'That does not look like a Google API key. It starts with AIza.'; return; }
+      state.set.gkey = k; state.ui.gsess = {}; persist(); closeSheet(); setBase(kind || 'gsat'); }; }); }
+function setBase(key){ if (!BASES[key]) key = 'sat'; var prev = state.ui.base;
+  if (BASES[key].google && !(state.set.gkey || '').trim()){ $('baseSel').value = BASES[prev] && !BASES[prev].google ? prev : 'sat'; googleKeySheet(key); return; }
+  state.ui.base = key; $('baseSel').value = key; if (!MAP.m) return; var b = BASES[key];
+  if (MAP.base){ if (MAP.base._gattr && MAP.m.attributionControl) MAP.m.attributionControl.removeAttribution(MAP.base._gattr); MAP.m.removeLayer(MAP.base); MAP.base = null; } if (MAP.label){ MAP.m.removeLayer(MAP.label); MAP.label = null; }
+  if (b.google){ if (inViewer){ toast('Google maps load in the installed app, not inside Claude.'); }
+    googleSession(key).then(function(sess){ if (state.ui.base !== key) return; if (MAP.base){ MAP.m.removeLayer(MAP.base); }
+      MAP.base = L.tileLayer('https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=' + sess + '&key=' + encodeURIComponent(state.set.gkey), {maxZoom:21, maxNativeZoom:b.max, attribution:''}).addTo(MAP.m); MAP.base._gsess = sess; MAP.base.bringToBack(); googleAttribution(); })
+      .catch(function(e){ toast('Google maps did not load: ' + e.message.slice(0, 140)); state.ui.gsess = {}; setBase('sat'); });
+    $('map').classList.toggle('dark-base', key !== 'groad'); persist(); return; }
   if (b.url){ MAP.base = L.tileLayer(b.url, {maxZoom:21, maxNativeZoom:b.max, attribution:b.attr, subdomains:'abc'}).addTo(MAP.m); MAP.base.bringToBack(); }
   if (b.labels){ MAP.label = L.tileLayer(b.labels, {maxZoom:21, maxNativeZoom:b.max, pane:'overlayPane'}).addTo(MAP.m); }
   $('map').classList.toggle('dark-base', key === 'sat' || key === 'hyb'); persist(); }
@@ -2553,7 +2586,8 @@ function wire(){
   $('rockList').innerHTML = ROCKS.map(function(r){ return '<option value="' + r + '">'; }).join('');
   var mq = window.matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', function(){ refreshAll(); drawDial(null); });
   window.addEventListener('resize', function(){ if (state.ui.tab === 'analyse' && lastA){ drawNet(lastA); drawRose(lastA); } drawDial(null); if (MAP.m) MAP.m.invalidateSize(); });
-  $('baseSel').innerHTML = Object.keys(BASES).map(function(k){ return '<option value="' + k + '">' + BASES[k].name + '</option>'; }).join(''); $('baseSel').value = state.ui.base || 'sat';
+  var opt = function(k){ return '<option value="' + k + '">' + BASES[k].name + '</option>'; }, ks = Object.keys(BASES);
+  $('baseSel').innerHTML = '<optgroup label="Free">' + ks.filter(function(k){ return !BASES[k].google; }).map(opt).join('') + '</optgroup><optgroup label="Google (needs your key)">' + ks.filter(function(k){ return BASES[k].google; }).map(opt).join('') + '</optgroup>'; $('baseSel').value = state.ui.base || 'sat';
   $('baseSel').onchange = function(){ setBase($('baseSel').value); };
   $('drawLine').onclick = function(){ startDraw('line'); }; $('drawPoly').onclick = function(){ startDraw('poly'); };
   $('drawUndo').onclick = function(){ if (DR){ DR.pts.pop(); renderDraft(); } };
